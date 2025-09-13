@@ -66,7 +66,7 @@ export default function ServicesPage() {
     if (!selectedService) return;
 
     try {
-      await api.delete(`/delete-service/${selectedService.id}`);
+      await api.delete(`/delete-service/${selectedService._id}`);
       toast({
         title: 'Serviço Excluído',
         description: 'O serviço foi excluído com sucesso.',

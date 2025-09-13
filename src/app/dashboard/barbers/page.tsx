@@ -77,7 +77,7 @@ export default function BarbersPage() {
 
     try {
       // Assuming the barber object has an _id property
-      await api.delete(`/delete-barber/${selectedBarber.id}`);
+      await api.delete(`/delete-barber/${selectedBarber._id}`);
       toast({
         title: 'Barbeiro Excluído',
         description: 'O barbeiro foi excluído com sucesso.',

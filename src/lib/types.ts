@@ -1,5 +1,6 @@
 export type User = {
   id: string;
+  _id?: string;
   name: string;
   email: string;
   role: 'admin' | 'manager';
@@ -8,17 +9,20 @@ export type User = {
 
 export type Barbershop = {
   id: string;
+  _id?: string;
   name: string;
 };
 
 export type Barber = {
   id: string;
+  _id?: string;
   name: string;
   barbershopId: string;
 };
 
 export type Service = {
   id: string;
+  _id?: string;
   name: string;
   price: number;
   duration: number; // in minutes
@@ -27,6 +31,7 @@ export type Service = {
 
 export type Product = {
   id: string;
+  _id?: string;
   name: string;
   price: number;
   stock: number;
@@ -35,6 +40,7 @@ export type Product = {
 
 export type Appointment = {
   id: string;
+  _id?: string;
   customerName: string;
   barbershopId: string;
   barberId: string;
@@ -52,6 +58,7 @@ export type TransactionDetails =
 
 export type Transaction = {
   id: string;
+  _id?: string;
   barbershopId: string;
   userId: string;
   type: 'revenue' | 'expense';

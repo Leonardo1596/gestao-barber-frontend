@@ -12,10 +12,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import type { Appointment } from '@/lib/types';
-import { barbers, services as allServices } from '@/lib/data';
+import type { Appointment, Barber, Service } from '@/lib/types';
 
-export const columns: ColumnDef<Appointment>[] = [
+export const getColumns = (
+  barbers: Barber[],
+  services: Service[],
+  onDelete: (appointment: Appointment) => void
+): ColumnDef<Appointment>[] => [
   {
     accessorKey: 'customerName',
     header: ({ column }) => {
@@ -31,7 +34,7 @@ export const columns: ColumnDef<Appointment>[] = [
     accessorKey: 'barberId',
     header: 'Barbeiro',
     cell: ({ row }) => {
-      const barber = barbers.find((b) => b.id === row.original.barberId);
+      const barber = barbers.find((b) => b._id === row.original.barberId);
       return barber ? barber.name : 'N/A';
     },
   },
@@ -40,10 +43,10 @@ export const columns: ColumnDef<Appointment>[] = [
     header: 'Serviços',
     cell: ({ row }) => {
         const serviceIds = row.original.serviceIds;
-        const appointmentServices = allServices.filter(s => serviceIds.includes(s.id));
+        const appointmentServices = services.filter(s => serviceIds.includes(s._id));
         return (
             <div className="flex flex-wrap gap-1">
-                {appointmentServices.map(s => <Badge key={s.id} variant="secondary">{s.name}</Badge>)}
+                {appointmentServices.map(s => <Badge key={s._id} variant="secondary">{s.name}</Badge>)}
             </div>
         )
     }
@@ -65,9 +68,10 @@ export const columns: ColumnDef<Appointment>[] = [
     header: 'Status',
     cell: ({ row }) => {
       const status = row.original.status;
-      let variant: 'default' | 'secondary' | 'destructive' = 'secondary';
+      let variant: 'default' | 'secondary' | 'destructive' | 'outline' = 'secondary';
       if (status === 'Concluído') variant = 'default';
       if (status === 'Cancelado') variant = 'destructive';
+      if (status === 'Agendado') variant = 'outline';
       return <Badge variant={variant}>{status}</Badge>;
     },
   },
@@ -85,10 +89,15 @@ export const columns: ColumnDef<Appointment>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Ações</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(appointment.id)}>Copiar ID</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(appointment._id)}>Copiar ID</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Editar</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">Excluir</DropdownMenuItem>
+            <DropdownMenuItem 
+              className="text-destructive"
+              onClick={() => onDelete(appointment)}
+            >
+              Excluir
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
