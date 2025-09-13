@@ -42,11 +42,14 @@ export const getColumns = (
     accessorKey: 'serviceIds',
     header: 'Serviços',
     cell: ({ row }) => {
-        const serviceIds = row.original.serviceIds;
-        const appointmentServices = services.filter(s => serviceIds.includes(s._id));
+        const serviceIds = row.original.serviceIds || [];
+        const appointmentServices = services.filter(s => serviceIds.includes(s._id!));
         return (
             <div className="flex flex-wrap gap-1">
-                {appointmentServices.map(s => <Badge key={s._id} variant="secondary">{s.name}</Badge>)}
+                {appointmentServices.length > 0 
+                  ? appointmentServices.map(s => <Badge key={s._id} variant="secondary">{s.name}</Badge>)
+                  : 'N/A'
+                }
             </div>
         )
     }
@@ -89,7 +92,7 @@ export const getColumns = (
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Ações</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(appointment._id)}>Copiar ID</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(appointment._id!)}>Copiar ID</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Editar</DropdownMenuItem>
             <DropdownMenuItem 
