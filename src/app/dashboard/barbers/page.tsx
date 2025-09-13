@@ -17,24 +17,35 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { BarberForm } from './_components/barber-form';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 export default function BarbersPage() {
   const [barbers, setBarbers] = useState<Barber[]>([]);
   const [barbershops, setBarbershops] = useState<Barbershop[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [selectedBarber, setSelectedBarber] = useState<Barber | null>(null);
+  const { toast } = useToast();
 
   async function fetchData() {
     try {
       const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
       if (user && user.barbershop) {
-        const [barbersResponse, barbershopsResponse] = await Promise.all([
-          api.get(`/barbers/barbershop/${user.barbershop}`),
-          api.get('/barbershops')
+        const [barbersResponse] = await Promise.all([
+          api.get(`barbers/barbershop/${user.barbershop}`)
         ]);
         setBarbers(barbersResponse.data);
-        setBarbershops(barbershopsResponse.data);
       } else if (user) {
-        // admin case
         const [barbersResponse, barbershopsResponse] = await Promise.all([
           api.get('/barbers'),
           api.get('/barbershops')
@@ -56,7 +67,36 @@ export default function BarbersPage() {
     setIsDialogOpen(false);
   }
 
-  const columns = getColumns(barbershops);
+  const openDeleteConfirm = (barber: Barber) => {
+    setSelectedBarber(barber);
+    setIsConfirmOpen(true);
+  };
+
+  const handleDeleteBarber = async () => {
+    if (!selectedBarber) return;
+
+    try {
+      // Assuming the barber object has an _id property
+      await api.delete(`/delete-barber/${selectedBarber.id}`);
+      toast({
+        title: 'Barbeiro Excluído',
+        description: 'O barbeiro foi excluído com sucesso.',
+      });
+      fetchData();
+    } catch (error) {
+      console.error('Failed to delete barber:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao Excluir',
+        description: 'Não foi possível excluir o barbeiro. Tente novamente.',
+      });
+    } finally {
+      setIsConfirmOpen(false);
+      setSelectedBarber(null);
+    }
+  };
+
+  const columns = getColumns(barbershops, openDeleteConfirm);
 
   return (
     <div>
@@ -85,6 +125,22 @@ export default function BarbersPage() {
         filterColumn="name"
         filterPlaceholder="Filtrar por nome..."
       />
+
+      <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa ação não pode ser desfeita. Isso excluirá permanentemente o barbeiro
+              e removerá seus dados de nossos servidores.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteBarber}>Continuar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

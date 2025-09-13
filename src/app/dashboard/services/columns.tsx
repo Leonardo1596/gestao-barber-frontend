@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { Service } from '@/lib/types';
 
-export const columns: ColumnDef<Service>[] = [
+export const getColumns = (onDelete: (service: Service) => void): ColumnDef<Service>[] => [
   {
     accessorKey: 'name',
     header: ({ column }) => {
@@ -59,7 +59,12 @@ export const columns: ColumnDef<Service>[] = [
             <DropdownMenuItem onClick={() => navigator.clipboard.writeText(service.id)}>Copiar ID</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Editar</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">Excluir</DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-destructive"
+              onClick={() => onDelete(service)}
+            >
+              Excluir
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

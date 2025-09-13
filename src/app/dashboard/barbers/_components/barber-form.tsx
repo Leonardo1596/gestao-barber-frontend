@@ -49,7 +49,7 @@ export function BarberForm({ onSuccess }: BarberFormProps) {
 
       const payload = {
         ...data,
-        barbershopId: user.barbershop,
+        barbershop: user.barbershop,
       };
 
       await api.post('/create-barber', payload);

@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { Barber, Barbershop } from '@/lib/types';
 
-export const getColumns = (barbershops: Barbershop[]): ColumnDef<Barber>[] => [
+export const getColumns = (barbershops: Barbershop[], onDelete: (barber: Barber) => void): ColumnDef<Barber>[] => [
   {
     accessorKey: 'name',
     header: ({ column }) => {
@@ -50,7 +50,12 @@ export const getColumns = (barbershops: Barbershop[]): ColumnDef<Barber>[] => [
             <DropdownMenuItem onClick={() => navigator.clipboard.writeText(barber.id)}>Copiar ID</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Editar</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">Excluir</DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-destructive"
+              onClick={() => onDelete(barber)}
+            >
+              Excluir
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
