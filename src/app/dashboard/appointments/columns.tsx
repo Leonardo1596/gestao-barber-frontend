@@ -44,7 +44,7 @@ export const getColumns = (
     accessorKey: 'services',
     header: 'Serviços',
     cell: ({ row }) => {
-        const serviceIds = row.original.serviceIds || [];
+        const serviceIds = row.original.services || [];
         const appointmentServices = services.filter(s => serviceIds.includes(s._id!));
         return (
             <div className="flex flex-wrap gap-1">

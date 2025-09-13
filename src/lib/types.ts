@@ -42,9 +42,9 @@ export type Appointment = {
   id: string;
   _id?: string;
   clientName: string;
-  barbershopId: string;
-  barber: Barber | string;
-  serviceIds: string[];
+  barbershop: string;
+  barber: string;
+  services: string[];
   date: string;
   hour: string;
   paymentMethod: 'dinheiro' | 'cartao' | 'pix';
