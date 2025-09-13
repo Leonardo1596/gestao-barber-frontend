@@ -46,7 +46,7 @@ export type Appointment = {
   barber: Barber | string;
   serviceIds: string[];
   date: string;
-  time: string;
+  hour: string;
   paymentMethod: 'dinheiro' | 'cartao' | 'pix';
   status: 'agendado' | 'concluido' | 'cancelado';
 };

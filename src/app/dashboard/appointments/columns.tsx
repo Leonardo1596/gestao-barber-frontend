@@ -69,6 +69,10 @@ export const getColumns = (
   {
     accessorKey: 'time',
     header: 'Hora',
+    cell: ({ row }) => {
+      const hour = row.original.hour;
+      return hour;
+    },
   },
   {
     accessorKey: 'status',

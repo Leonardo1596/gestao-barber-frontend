@@ -31,8 +31,8 @@ const formSchema = z.object({
   barberId: z.string().min(1, 'Barbeiro é obrigatório.'),
   serviceIds: z.array(z.string()).min(1, 'Selecione pelo menos um serviço.'),
   date: z.date({ required_error: 'Data é obrigatória.' }),
-  time: z.string().min(1, 'Hora é obrigatória.'),
-  paymentMethod: z.enum(['Dinheiro', 'Cartão de Crédito', 'Pix'], { required_error: 'Método de pagamento é obrigatório.' }),
+  hour: z.string().min(1, 'Hora é obrigatória.'),
+  paymentMethod: z.enum(['dinheiro', 'cartao', 'pix'], { required_error: 'Método de pagamento é obrigatório.' }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -48,7 +48,11 @@ export function AppointmentForm({ barbers, services, onSuccess }: AppointmentFor
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      clientName: '',
+      barberId: '',
       serviceIds: [],
+      hour: '',
+      paymentMethod: undefined,
     },
   });
 
@@ -68,9 +72,11 @@ export function AppointmentForm({ barbers, services, onSuccess }: AppointmentFor
 
       const payload = {
         ...data,
-        barbershopId: user.barbershop,
+        barbershop: user.barbershop,
         date: format(data.date, 'yyyy-MM-dd'),
       };
+
+      console.log(payload);
 
       await api.post('/create-appointment', payload);
 
@@ -120,7 +126,7 @@ export function AppointmentForm({ barbers, services, onSuccess }: AppointmentFor
                 </FormControl>
                 <SelectContent>
                   {barbers.map((barber) => (
-                    <SelectItem key={barber._id} value={barber._id}>
+                    <SelectItem key={barber._id} value={barber._id!}>
                       {barber.name}
                     </SelectItem>
                   ))}
@@ -154,12 +160,13 @@ export function AppointmentForm({ barbers, services, onSuccess }: AppointmentFor
                       >
                         <FormControl>
                           <Checkbox
-                            checked={field.value?.includes(item._id)}
+                            checked={field.value?.includes(item._id!)}
                             onCheckedChange={(checked) => {
+                              const currentServices = field.value || [];
                               return checked
-                                ? field.onChange([...field.value, item._id])
+                                ? field.onChange([...currentServices, item._id!])
                                 : field.onChange(
-                                    field.value?.filter(
+                                    currentServices.filter(
                                       (value) => value !== item._id
                                     )
                                   );
@@ -218,7 +225,7 @@ export function AppointmentForm({ barbers, services, onSuccess }: AppointmentFor
         />
         <FormField
           control={form.control}
-          name="time"
+          name="hour"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Hora</FormLabel>
@@ -242,9 +249,9 @@ export function AppointmentForm({ barbers, services, onSuccess }: AppointmentFor
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Dinheiro">Dinheiro</SelectItem>
-                  <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
-                  <SelectItem value="Pix">Pix</SelectItem>
+                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                  <SelectItem value="cartao">Cartão de Crédito</SelectItem>
+                  <SelectItem value="pix">Pix</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
