@@ -46,55 +46,89 @@ export default function ReportsPage() {
   const [isPending, startTransition] = useTransition();
   const [insights, setInsights] = useState<string | null>(null);
 
-  const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
   const [barberList, setBarberList] = useState<any[]>([]);
   const [report, setReport] = useState<Record<string, number> | null>(null);
   const [selectedBarber, setSelectedBarber] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null); // agora vem do useEffect
+
+  // Pega usuário do localStorage apenas no cliente
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
   // Fetch barbers
   useEffect(() => {
+    if (!user) return;
+
     async function fetchBarbers() {
       try {
         const response = await api.get(`barbers/barbershop/${user.barbershop}`);
-        setBarberList(response.data);
+        setBarberList(response.data || []);
       } catch (err) {
-        console.error(err);
+        console.error('Erro ao buscar barbeiros:', err);
       }
     }
     fetchBarbers();
-  }, []);
+  }, [user]);
 
   // Fetch report
-  async function fetchReport() {
+  const fetchReport = async () => {
+    if (!user) return;
+
     try {
       const url = selectedBarber
         ? `/report-by-barber-and-period/barbershop/${user.barbershop}/${selectedBarber}/2025-09-10/2025-09-14`
         : `/report-by-period/barbershop/${user.barbershop}/2025-09-08/2025-09-14`;
 
       const response = await api.get(url);
-      setReport(response.data);
+      setReport(response.data || {});
     } catch (err) {
       console.error('Erro ao buscar report:', err);
+      setReport({});
     }
-  }
+  };
 
-  // Re-fetch report sempre que o filtro mudar
   useEffect(() => {
     fetchReport();
-  }, [selectedBarber]);
+  }, [selectedBarber, user]); // adiciona user como dependência
 
   const handleGenerateInsights = () => {
     startTransition(async () => {
       if (!report) return;
 
+      const normalizedReport = {
+        revenues: report.revenues ?? 0,
+        expenses: report.expenses ?? 0,
+        netRevenue: report.netRevenue ?? 0,
+        profitMargin: report.profitMargin ?? 0,
+        appointmentRevenues: report.appointmentRevenues ?? 0,
+        productRevenues: report.productRevenues ?? 0,
+        productsSold: report.productsSold ?? 0,
+        completedAppointments: report.completedAppointments ?? 0,
+        completedServices: report.completedServices ?? 0,
+        averageTicketAppointment: report.averageTicketAppointment ?? 0,
+        averageTicketService: report.averageTicketService ?? 0,
+      };
+
       const input: GenerateReportInsightsInput = {
-        reportData: report,
+        reportData: normalizedReport,
         barbershopName: 'Gestão Barber',
       };
-      const result = await generateReportInsights(input);
-      setInsights(result.insights);
+
+      try {
+        const result = await generateReportInsights(input);
+        setInsights(result.insights);
+      } catch (err) {
+        console.error('Erro ao gerar insights:', err);
+        setInsights('Não foi possível gerar insights no momento.');
+      }
     });
   };
+
+  if (!user) return <div>Carregando...</div>; // espera pegar o user
 
   return (
     <div>
@@ -119,7 +153,7 @@ export default function ReportsPage() {
       </PageHeader>
 
       <div className="space-y-6">
-        {report && (
+        {report && Object.keys(reportLabels).length > 0 && (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {Object.keys(reportLabels).map((key) => (
               <Card key={key}>
@@ -127,7 +161,7 @@ export default function ReportsPage() {
                   <CardTitle className="text-sm font-medium">{reportLabels[key]}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{formatValue(key, report[key] || 0)}</div>
+                  <div className="text-2xl font-bold">{formatValue(key, report[key] ?? 0)}</div>
                 </CardContent>
               </Card>
             ))}
