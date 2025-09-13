@@ -69,15 +69,14 @@ export function AppointmentForm({ barbers, services, onSuccess }: AppointmentFor
         return;
       }
 
-      const { barberId, ...restData } = data;
+      const { barberId, serviceIds, ...restData } = data;
       const payload = {
         ...restData,
         barber: barberId,
+        services: serviceIds,
         barbershop: user.barbershop,
         date: format(data.date, 'yyyy-MM-dd'),
       };
-
-      console.log(payload);
 
       await api.post('/create-appointment', payload);
 
