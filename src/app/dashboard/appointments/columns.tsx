@@ -34,7 +34,8 @@ export const getColumns = (
     accessorKey: 'barber',
     header: 'Barbeiro',
     cell: ({ row }) => {
-      const barber = row.original.barber as Barber;
+      const barberId = row.original.barber;
+      const barber = barbers.find(b => b._id === barberId);
       return barber ? barber.name : 'N/A';
     },
   },
