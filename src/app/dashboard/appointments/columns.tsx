@@ -72,9 +72,9 @@ export const getColumns = (
     cell: ({ row }) => {
       const status = row.original.status;
       let variant: 'default' | 'secondary' | 'destructive' | 'outline' = 'secondary';
-      if (status === 'Concluído') variant = 'default';
-      if (status === 'Cancelado') variant = 'destructive';
-      if (status === 'Agendado') variant = 'outline';
+      if (status === 'concluido') variant = 'default';
+      if (status === 'cancelado') variant = 'destructive';
+      if (status === 'agendado') variant = 'outline';
       return <Badge variant={variant}>{status}</Badge>;
     },
   },

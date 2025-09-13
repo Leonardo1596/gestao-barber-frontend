@@ -47,8 +47,8 @@ export type Appointment = {
   serviceIds: string[];
   date: string;
   time: string;
-  paymentMethod: 'Dinheiro' | 'Cartão de Crédito' | 'Pix';
-  status: 'Agendado' | 'Concluído' | 'Cancelado';
+  paymentMethod: 'dinheiro' | 'cartao' | 'pix';
+  status: 'agendado' | 'concluido' | 'cancelado';
 };
 
 export type TransactionDetails = 
