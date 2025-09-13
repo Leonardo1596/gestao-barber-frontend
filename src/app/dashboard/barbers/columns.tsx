@@ -11,10 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { Barber } from '@/lib/types';
-import { barbershops } from '@/lib/data';
+import type { Barber, Barbershop } from '@/lib/types';
 
-export const columns: ColumnDef<Barber>[] = [
+export const getColumns = (barbershops: Barbershop[]): ColumnDef<Barber>[] => [
   {
     accessorKey: 'name',
     header: ({ column }) => {

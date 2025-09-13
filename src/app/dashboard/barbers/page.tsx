@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/page-header';
 import { PlusCircle } from 'lucide-react';
 import { DataTable } from '@/components/data-table';
-import { columns } from './columns';
+import { getColumns } from './columns';
 import api from '@/services/api';
-import type { Barber } from '@/lib/types';
+import type { Barber, Barbershop } from '@/lib/types';
 import {
   Dialog,
   DialogContent,
@@ -20,28 +20,43 @@ import { BarberForm } from './_components/barber-form';
 
 export default function BarbersPage() {
   const [barbers, setBarbers] = useState<Barber[]>([]);
+  const [barbershops, setBarbershops] = useState<Barbershop[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  async function fetchBarbers() {
+  async function fetchData() {
     try {
       const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
       if (user && user.barbershop) {
-        const response = await api.get(`/barbers/barbershop/${user.barbershop}`);
-        setBarbers(response.data);
+        const [barbersResponse, barbershopsResponse] = await Promise.all([
+          api.get(`/barbers/barbershop/${user.barbershop}`),
+          api.get('/barbershops')
+        ]);
+        setBarbers(barbersResponse.data);
+        setBarbershops(barbershopsResponse.data);
+      } else if (user) {
+        // admin case
+        const [barbersResponse, barbershopsResponse] = await Promise.all([
+          api.get('/barbers'),
+          api.get('/barbershops')
+        ]);
+        setBarbers(barbersResponse.data);
+        setBarbershops(barbershopsResponse.data);
       }
     } catch (error) {
-      console.error('Failed to fetch barbers:', error);
+      console.error('Failed to fetch data:', error);
     }
   }
 
   useEffect(() => {
-    fetchBarbers();
+    fetchData();
   }, []);
   
   const handleFormSuccess = () => {
-    fetchBarbers();
+    fetchData();
     setIsDialogOpen(false);
   }
+
+  const columns = getColumns(barbershops);
 
   return (
     <div>
