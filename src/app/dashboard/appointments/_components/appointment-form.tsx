@@ -52,7 +52,6 @@ export function AppointmentForm({ barbers, services, onSuccess }: AppointmentFor
       barberId: '',
       serviceIds: [],
       hour: '',
-      paymentMethod: undefined,
     },
   });
 
@@ -70,8 +69,10 @@ export function AppointmentForm({ barbers, services, onSuccess }: AppointmentFor
         return;
       }
 
+      const { barberId, ...restData } = data;
       const payload = {
-        ...data,
+        ...restData,
+        barber: barberId,
         barbershop: user.barbershop,
         date: format(data.date, 'yyyy-MM-dd'),
       };
