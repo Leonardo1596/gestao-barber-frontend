@@ -40,7 +40,7 @@ export const getColumns = (
     },
   },
   {
-    accessorKey: 'serviceIds',
+    accessorKey: 'services',
     header: 'Serviços',
     cell: ({ row }) => {
         const serviceIds = row.original.serviceIds || [];
@@ -57,15 +57,18 @@ export const getColumns = (
   },
   {
     accessorKey: 'date',
-    header: 'Data e Hora',
+    header: 'Data',
     cell: ({ row }) => {
       const date = new Date(row.original.date);
       // Adjust for timezone offset
       const userTimezoneOffset = date.getTimezoneOffset() * 60000;
       const adjustedDate = new Date(date.getTime() + userTimezoneOffset);
-      const formattedDate = new Intl.DateTimeFormat('pt-BR').format(adjustedDate);
-      return `${formattedDate} às ${row.original.time}`;
+      return new Intl.DateTimeFormat('pt-BR').format(adjustedDate);
     },
+  },
+  {
+    accessorKey: 'time',
+    header: 'Hora',
   },
   {
     accessorKey: 'status',
