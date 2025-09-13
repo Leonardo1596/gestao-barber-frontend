@@ -1,49 +1,42 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useEffect, useState, useTransition } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Lightbulb, Loader2 } from 'lucide-react';
-import { barbers, barbershops, reportData as initialReportData } from '@/lib/data';
-import type { Report } from '@/lib/types';
 import { generateReportInsights, GenerateReportInsightsInput } from '@/ai/flows/generate-report-insights';
+import api from '../../services/api';
 
-const reportLabels: { [key in keyof Report]: string } = {
-  receitas: 'Receitas',
-  despesas: 'Despesas',
-  receitaLiquida: 'Receita Líquida',
-  margemDeLucro: 'Margem de Lucro',
-  receitasDeAgendamento: 'Receitas de Agendamento',
-  receitasDeProduto: 'Receitas de Produto',
-  produtosVendidos: 'Produtos Vendidos',
-  agendamentosConcluidos: 'Agendamentos Concluídos',
-  servicosConcluidos: 'Serviços Concluídos',
-  ticketMedioPorAgendamento: 'Ticket Médio por Agendamento',
-  ticketMedioPorServico: 'Ticket Médio por Serviço',
+const reportLabels: Record<string, string> = {
+  revenues: 'Receitas',
+  expenses: 'Despesas',
+  netRevenue: 'Receita Líquida',
+  profitMargin: 'Margem de Lucro',
+  appointmentRevenues: 'Receitas de Agendamento',
+  productRevenues: 'Receitas de Produto',
+  productsSold: 'Produtos Vendidos',
+  completedAppointments: 'Agendamentos Concluídos',
+  completedServices: 'Serviços Concluídos',
+  averageTicketAppointment: 'Ticket Médio por Agendamento',
+  averageTicketService: 'Ticket Médio por Serviço',
 };
 
-const translatedReportData: Report = {
-  receitas: initialReportData.revenues,
-  despesas: initialReportData.expenses,
-  receitaLiquida: initialReportData.netRevenue,
-  margemDeLucro: initialReportData.profitMargin,
-  receitasDeAgendamento: initialReportData.appointmentRevenues,
-  receitasDeProduto: initialReportData.productRevenues,
-  produtosVendidos: initialReportData.productsSold,
-  agendamentosConcluidos: initialReportData.completedAppointments,
-  servicosConcluidos: initialReportData.completedServices,
-  ticketMedioPorAgendamento: initialReportData.averageTicketAppointment,
-  ticketMedioPorServico: initialReportData.averageTicketService,
-};
-
-function formatValue(key: keyof Report, value: number) {
-  if (key === 'margemDeLucro') {
-    return `${(value * 100).toFixed(2)}%`;
-  }
-  if (['receitas', 'despesas', 'receitaLiquida', 'receitasDeAgendamento', 'receitasDeProduto', 'ticketMedioPorAgendamento', 'ticketMedioPorServico'].includes(key)) {
+function formatValue(key: string, value: number) {
+  if (key === 'profitMargin') return `${value.toFixed(2)}%`;
+  if (
+    [
+      'revenues',
+      'expenses',
+      'netRevenue',
+      'appointmentRevenues',
+      'productRevenues',
+      'averageTicketAppointment',
+      'averageTicketService',
+    ].includes(key)
+  ) {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   }
   return value;
@@ -53,10 +46,49 @@ export default function ReportsPage() {
   const [isPending, startTransition] = useTransition();
   const [insights, setInsights] = useState<string | null>(null);
 
+  const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
+  const [barberList, setBarberList] = useState<any[]>([]);
+  const [report, setReport] = useState<Record<string, number> | null>(null);
+  const [selectedBarber, setSelectedBarber] = useState<string | null>(null);
+
+  // Fetch barbers
+  useEffect(() => {
+    async function fetchBarbers() {
+      try {
+        const response = await api.get(`barbers/barbershop/${user.barbershop}`);
+        setBarberList(response.data);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    fetchBarbers();
+  }, []);
+
+  // Fetch report
+  async function fetchReport() {
+    try {
+      const url = selectedBarber
+        ? `/report-by-barber-and-period/barbershop/${user.barbershop}/${selectedBarber}/2025-09-10/2025-09-14`
+        : `/report-by-period/barbershop/${user.barbershop}/2025-09-08/2025-09-14`;
+
+      const response = await api.get(url);
+      setReport(response.data);
+    } catch (err) {
+      console.error('Erro ao buscar report:', err);
+    }
+  }
+
+  // Re-fetch report sempre que o filtro mudar
+  useEffect(() => {
+    fetchReport();
+  }, [selectedBarber]);
+
   const handleGenerateInsights = () => {
     startTransition(async () => {
+      if (!report) return;
+
       const input: GenerateReportInsightsInput = {
-        reportData: initialReportData,
+        reportData: report,
         barbershopName: 'Gestão Barber',
       };
       const result = await generateReportInsights(input);
@@ -68,64 +100,62 @@ export default function ReportsPage() {
     <div>
       <PageHeader title="Relatórios">
         <div className="flex items-center gap-2">
-          <Select defaultValue="shop-1">
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Barbearia" />
-            </SelectTrigger>
-            <SelectContent>
-              {barbershops.map(shop => <SelectItem key={shop.id} value={shop.id}>{shop.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select>
+          <Select
+            onValueChange={(value) => setSelectedBarber(value === 'all' ? null : value)}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filtrar por barbeiro" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os barbeiros</SelectItem>
-              {barbers.map(barber => <SelectItem key={barber.id} value={barber.id}>{barber.name}</SelectItem>)}
+              {barberList.map((barber) => (
+                <SelectItem key={barber._id} value={barber._id}>
+                  {barber.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
       </PageHeader>
 
       <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {(Object.keys(translatedReportData) as Array<keyof Report>).map((key) => (
-            <Card key={key}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{reportLabels[key]}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{formatValue(key, translatedReportData[key])}</div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {report && (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {Object.keys(reportLabels).map((key) => (
+              <Card key={key}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{reportLabels[key]}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{formatValue(key, report[key] || 0)}</div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         <div>
-            <Button onClick={handleGenerateInsights} disabled={isPending}>
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Gerando...
-                </>
-              ) : (
-                <>
-                  <Lightbulb className="mr-2 h-4 w-4" />
-                  Gerar Insights com IA
-                </>
-              )}
-            </Button>
-
-            {insights && (
-                 <Alert className="mt-4">
-                    <Lightbulb className="h-4 w-4" />
-                    <AlertTitle className="font-headline">Insights e Recomendações</AlertTitle>
-                    <AlertDescription className="mt-2 whitespace-pre-wrap">
-                        {insights}
-                    </AlertDescription>
-                </Alert>
+          <Button onClick={handleGenerateInsights} disabled={isPending || !report}>
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Gerando...
+              </>
+            ) : (
+              <>
+                <Lightbulb className="mr-2 h-4 w-4" />
+                Gerar Insights com IA
+              </>
             )}
+          </Button>
+
+          {insights && (
+            <Alert className="mt-4">
+              <Lightbulb className="h-4 w-4" />
+              <AlertTitle className="font-headline">Insights e Recomendações</AlertTitle>
+              <AlertDescription className="mt-2 whitespace-pre-wrap">{insights}</AlertDescription>
+            </Alert>
+          )}
         </div>
       </div>
     </div>

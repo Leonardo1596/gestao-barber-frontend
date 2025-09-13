@@ -1,21 +1,25 @@
 import type { Barber, Service, Product, Appointment, Transaction, User } from './types';
+import api from '../services/api';
+
 
 export const users: User[] = [
   { id: 'user-1', name: 'Admin', email: 'admin@gestaobarber.com', role: 'admin' },
   { id: 'user-2', name: 'Gerente Barbearia Centro', email: 'gerente.centro@barber.com', role: 'manager', barbershopId: 'shop-1' },
 ];
 
-export const barbershops = [
-    { id: 'shop-1', name: 'Barbearia Centro' },
-    { id: 'shop-2', name: 'Barbearia Vizinhança' },
-]
+// export const barbers: Barber[] = [
+//   { id: 'barber-1', name: 'Carlos', barbershopId: 'shop-1' },
+//   { id: 'barber-2', name: 'Miguel', barbershopId: 'shop-1' },
+//   { id: 'barber-3', name: 'Jonas', barbershopId: 'shop-2' },
+//   { id: 'barber-4', name: 'Lucas', barbershopId: 'shop-2' },
+// ];
 
-export const barbers: Barber[] = [
-  { id: 'barber-1', name: 'Carlos', barbershopId: 'shop-1' },
-  { id: 'barber-2', name: 'Miguel', barbershopId: 'shop-1' },
-  { id: 'barber-3', name: 'Jonas', barbershopId: 'shop-2' },
-  { id: 'barber-4', name: 'Lucas', barbershopId: 'shop-2' },
-];
+export const barbers= async () => {
+  const response = await api.get('barbers/barbershop/688852fac688e5ffa8173a5a');
+  const data = response.data;
+  console.log(data);
+  return data;
+}
 
 export const services: Service[] = [
   { id: 'service-1', name: 'Corte Masculino', price: 50, duration: 30, barbershopId: 'shop-1' },

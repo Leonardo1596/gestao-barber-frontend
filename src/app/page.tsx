@@ -8,14 +8,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
+import { useState } from 'react';
+import { login } from '../services/auth';
 
 export default function LoginPage() {
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     // Mock login logic
-    router.push('/dashboard');
+    try {
+      const user = await login(email, password);
+      console.log('Usuário logado:', user);
+
+      router.push('/dashboard');
+    } catch (err) {
+
+    }
   };
 
   return (
@@ -36,8 +48,9 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 placeholder="m@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                defaultValue="admin@gestaobarber.com"
               />
             </div>
             <div className="grid gap-2">
@@ -50,7 +63,7 @@ export default function LoginPage() {
                   Esqueceu sua senha?
                 </Link>
               </div>
-              <Input id="password" type="password" required defaultValue="password" />
+              <Input id="password" type="password" placeholder='senha' required value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
             <Button type="submit" className="w-full">
               Login
