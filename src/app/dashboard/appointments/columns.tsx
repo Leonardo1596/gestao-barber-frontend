@@ -31,10 +31,10 @@ export const getColumns = (
     },
   },
   {
-    accessorKey: 'barberId',
+    accessorKey: 'barber',
     header: 'Barbeiro',
     cell: ({ row }) => {
-      const barber = barbers.find((b) => b._id === row.original.barberId);
+      const barber = row.original.barber as Barber;
       return barber ? barber.name : 'N/A';
     },
   },

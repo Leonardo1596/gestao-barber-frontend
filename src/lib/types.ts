@@ -43,7 +43,7 @@ export type Appointment = {
   _id?: string;
   clientName: string;
   barbershopId: string;
-  barberId: string;
+  barber: Barber | string;
   serviceIds: string[];
   date: string;
   time: string;
