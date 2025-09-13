@@ -41,7 +41,7 @@ export type Product = {
 export type Appointment = {
   id: string;
   _id?: string;
-  customerName: string;
+  clientName: string;
   barbershopId: string;
   barberId: string;
   serviceIds: string[];

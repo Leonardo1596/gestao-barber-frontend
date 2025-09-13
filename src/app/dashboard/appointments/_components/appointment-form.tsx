@@ -27,7 +27,7 @@ import { ptBR } from 'date-fns/locale';
 import type { Barber, Service } from '@/lib/types';
 
 const formSchema = z.object({
-  customerName: z.string().min(1, 'Nome do cliente é obrigatório.'),
+  clientName: z.string().min(1, 'Nome do cliente é obrigatório.'),
   barberId: z.string().min(1, 'Barbeiro é obrigatório.'),
   serviceIds: z.array(z.string()).min(1, 'Selecione pelo menos um serviço.'),
   date: z.date({ required_error: 'Data é obrigatória.' }),
@@ -95,7 +95,7 @@ export function AppointmentForm({ barbers, services, onSuccess }: AppointmentFor
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="customerName"
+          name="clientName"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Nome do Cliente</FormLabel>

@@ -20,7 +20,7 @@ export const getColumns = (
   onDelete: (appointment: Appointment) => void
 ): ColumnDef<Appointment>[] => [
   {
-    accessorKey: 'customerName',
+    accessorKey: 'clientName',
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>

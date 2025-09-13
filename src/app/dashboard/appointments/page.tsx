@@ -128,7 +128,7 @@ export default function AppointmentsPage() {
       <DataTable
         columns={columns}
         data={appointments}
-        filterColumn="customerName"
+        filterColumn="clientName"
         filterPlaceholder="Filtrar por cliente..."
       />
 
