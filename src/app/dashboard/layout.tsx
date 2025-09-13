@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { users } from '@/lib/data';
+import { logout } from '@/services/auth';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Relatórios' },
@@ -51,6 +52,10 @@ const navItems = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const currentUser = users[0]; // Mock current user
+
+  const handleLogout = async () => {
+    const endSession = await logout();
+  };
 
   return (
     <SidebarProvider>
@@ -103,7 +108,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/">
+                <Link href="" onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Sair</span>
                 </Link>

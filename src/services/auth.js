@@ -43,7 +43,7 @@ export const register = async (userData) => {
 export const logout = () => {
     localStorage.removeItem('token'); // Removes the token from localStorage
     localStorage.removeItem('user'); // Removes user data from localStorage
-    window.location.href = '/entrar'; // Redirects to the login page
+    window.location.href = '/'; // Redirects to the login page
 };
 
 // Function to check if the user is authenticated
