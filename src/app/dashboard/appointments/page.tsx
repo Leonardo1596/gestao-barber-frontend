@@ -34,7 +34,8 @@ export default function AppointmentsPage() {
   const [barbers, setBarbers] = useState<Barber[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isCompleteConfirmOpen, setIsCompleteConfirmOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const { toast } = useToast();
 
@@ -72,7 +73,12 @@ export default function AppointmentsPage() {
 
   const openDeleteConfirm = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
-    setIsConfirmOpen(true);
+    setIsDeleteConfirmOpen(true);
+  };
+  
+  const openCompleteConfirm = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setIsCompleteConfirmOpen(true);
   };
 
   const handleDeleteAppointment = async () => {
@@ -93,14 +99,16 @@ export default function AppointmentsPage() {
         description: 'Não foi possível excluir o agendamento. Tente novamente.',
       });
     } finally {
-      setIsConfirmOpen(false);
+      setIsDeleteConfirmOpen(false);
       setSelectedAppointment(null);
     }
   };
 
-  const handleCompleteAppointment = async (appointment: Appointment) => {
+  const handleCompleteAppointment = async () => {
+    if (!selectedAppointment) return;
+    
     try {
-      await api.put(`/update-appointment/${appointment._id}`, { status: 'concluido' });
+      await api.put(`/update-appointment/${selectedAppointment._id}`, { status: 'concluido' });
       toast({
         title: 'Agendamento Concluído',
         description: 'O agendamento foi marcado como concluído e a transação foi criada.',
@@ -113,10 +121,13 @@ export default function AppointmentsPage() {
         title: 'Erro ao Concluir',
         description: 'Não foi possível concluir o agendamento. Tente novamente.',
       });
+    } finally {
+      setIsCompleteConfirmOpen(false);
+      setSelectedAppointment(null);
     }
   };
 
-  const columns = getColumns(barbers, services, openDeleteConfirm, handleCompleteAppointment);
+  const columns = getColumns(barbers, services, openDeleteConfirm, openCompleteConfirm);
 
   return (
     <div>
@@ -150,7 +161,7 @@ export default function AppointmentsPage() {
         filterPlaceholder="Filtrar por cliente..."
       />
 
-      <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+      <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
@@ -161,6 +172,21 @@ export default function AppointmentsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteAppointment}>Continuar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isCompleteConfirmOpen} onOpenChange={setIsCompleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Marcar como Concluído?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação irá marcar o agendamento como concluído e criar uma transação correspondente. Você confirma esta ação?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCompleteAppointment}>Confirmar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
