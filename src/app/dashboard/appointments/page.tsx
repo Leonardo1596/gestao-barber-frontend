@@ -98,7 +98,25 @@ export default function AppointmentsPage() {
     }
   };
 
-  const columns = getColumns(barbers, services, openDeleteConfirm);
+  const handleCompleteAppointment = async (appointment: Appointment) => {
+    try {
+      await api.put(`/update-appointment/${appointment._id}`, { status: 'concluido' });
+      toast({
+        title: 'Agendamento Concluído',
+        description: 'O agendamento foi marcado como concluído e a transação foi criada.',
+      });
+      fetchData();
+    } catch (error) {
+      console.error('Failed to complete appointment:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao Concluir',
+        description: 'Não foi possível concluir o agendamento. Tente novamente.',
+      });
+    }
+  };
+
+  const columns = getColumns(barbers, services, openDeleteConfirm, handleCompleteAppointment);
 
   return (
     <div>

@@ -17,7 +17,8 @@ import type { Appointment, Barber, Service } from '@/lib/types';
 export const getColumns = (
   barbers: Barber[],
   services: Service[],
-  onDelete: (appointment: Appointment) => void
+  onDelete: (appointment: Appointment) => void,
+  onComplete: (appointment: Appointment) => void
 ): ColumnDef<Appointment>[] => [
   {
     accessorKey: 'clientName',
@@ -67,12 +68,8 @@ export const getColumns = (
     },
   },
   {
-    accessorKey: 'time',
+    accessorKey: 'hour',
     header: 'Hora',
-    cell: ({ row }) => {
-      const hour = row.original.hour;
-      return hour;
-    },
   },
   {
     accessorKey: 'status',
@@ -102,6 +99,11 @@ export const getColumns = (
             <DropdownMenuLabel>Ações</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => navigator.clipboard.writeText(appointment._id!)}>Copiar ID</DropdownMenuItem>
             <DropdownMenuSeparator />
+            {appointment.status === 'agendado' && (
+              <DropdownMenuItem onClick={() => onComplete(appointment)}>
+                Marcar como Concluído
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem>Editar</DropdownMenuItem>
             <DropdownMenuItem 
               className="text-destructive"
