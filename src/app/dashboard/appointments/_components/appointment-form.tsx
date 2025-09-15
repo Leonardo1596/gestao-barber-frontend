@@ -1,6 +1,7 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useEffect, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -45,6 +46,7 @@ type AppointmentFormProps = {
 
 export function AppointmentForm({ barbers, services, onSuccess }: AppointmentFormProps) {
   const { toast } = useToast();
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -52,10 +54,70 @@ export function AppointmentForm({ barbers, services, onSuccess }: AppointmentFor
       barberId: '',
       serviceIds: [],
       hour: '',
+      // paymentMethod intentionally left empty so user selects it
     },
   });
 
+  const { control, setValue } = form;
   const { isSubmitting } = form.formState;
+
+  // estados para horários
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [loadingTimes, setLoadingTimes] = useState(false);
+
+  // observa barbeiro e data
+  const watchedBarberId = useWatch({ control, name: 'barberId' });
+  const watchedDate = useWatch({ control, name: 'date' });
+
+  // When barber or date changes, fetch available times
+  useEffect(() => {
+    // Clean previous selection of time always when barber/date change
+    setValue('hour', '');
+
+    // If dont have barber or date, clean list and return
+    if (!watchedBarberId || !watchedDate) {
+      setAvailableTimes([]);
+      setLoadingTimes(false);
+      return;
+    }
+
+    const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
+    if (!user?.barbershop) {
+      setAvailableTimes([]);
+      return;
+    }
+
+    let cancelled = false;
+    async function fetchAvailableTimes() {
+      setLoadingTimes(true);
+      setAvailableTimes([]);
+      try {
+        const formattedDate = format(watchedDate, 'yyyy-MM-dd');
+        const res = await api.get(`/available-times/${formattedDate}/${watchedBarberId}/${user.barbershop}`);
+        if (!cancelled) {
+          setAvailableTimes(Array.isArray(res.data) ? res.data : []);
+        }
+      } catch (err) {
+        console.error('Erro ao buscar horários disponíveis:', err);
+        if (!cancelled) {
+          setAvailableTimes([]);
+          toast({
+            variant: 'destructive',
+            title: 'Erro',
+            description: 'Não foi possível carregar os horários disponíveis.',
+          });
+        }
+      } finally {
+        if (!cancelled) setLoadingTimes(false);
+      }
+    }
+
+    fetchAvailableTimes();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [watchedBarberId, watchedDate, setValue, toast]);
 
   async function onSubmit(data: FormValues) {
     try {
@@ -112,13 +174,14 @@ export function AppointmentForm({ barbers, services, onSuccess }: AppointmentFor
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="barberId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Barbeiro</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um barbeiro" />
@@ -136,6 +199,7 @@ export function AppointmentForm({ barbers, services, onSuccess }: AppointmentFor
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="serviceIds"
@@ -185,6 +249,7 @@ export function AppointmentForm({ barbers, services, onSuccess }: AppointmentFor
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="date"
@@ -223,26 +288,54 @@ export function AppointmentForm({ barbers, services, onSuccess }: AppointmentFor
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="hour"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Hora</FormLabel>
-              <FormControl>
-                <Input type="time" {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder={
+                      watchedBarberId && watchedDate
+                        ? (loadingTimes ? 'Carregando...' : 'Selecione um horário')
+                        : 'Selecione barbeiro e data primeiro'
+                    } />
+                  </SelectTrigger>
+                </FormControl>
+
+                <SelectContent>
+                  {/* On loading */}
+                  {loadingTimes ? (
+                    <div className="p-2 text-sm">Carregando horários...</div>
+                  ) : !watchedBarberId || !watchedDate ? (
+                    <div className="p-2 text-sm">Selecione barbeiro e data para ver horários</div>
+                  ) : availableTimes.length === 0 ? (
+                    <div className="p-2 text-sm">Nenhum horário disponível</div>
+                  ) : (
+                    availableTimes.map((time) => (
+                      // valor nunca será string vazia -> evita erro do SelectItem
+                      <SelectItem key={time} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="paymentMethod"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Método de Pagamento</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o método" />
@@ -258,6 +351,7 @@ export function AppointmentForm({ barbers, services, onSuccess }: AppointmentFor
             </FormItem>
           )}
         />
+
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Criar Agendamento'}
         </Button>

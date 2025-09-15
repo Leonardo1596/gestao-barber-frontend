@@ -80,8 +80,8 @@ export default function ReportsPage() {
 
     try {
       const url = selectedBarber
-        ? `/report-by-barber-and-period/barbershop/${user.barbershop}/${selectedBarber}/2025-09-10/2025-09-14`
-        : `/report-by-period/barbershop/${user.barbershop}/2025-09-08/2025-09-14`;
+        ? `/report-by-barber-and-period/barbershop/${user.barbershop}/${selectedBarber}/2025-09-10/2025-09-15`
+        : `/report-by-period/barbershop/${user.barbershop}/2025-09-08/2025-09-15`;
 
       const response = await api.get(url);
       setReport(response.data || {});
