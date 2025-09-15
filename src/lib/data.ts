@@ -1,10 +1,5 @@
 import type { Barber, Service, Product, Appointment, Transaction, User, Barbershop } from './types';
 
-export const users: User[] = [
-  { id: 'user-1', name: 'Admin', email: 'admin@gestaobarber.com', role: 'admin' },
-  { id: 'user-2', name: 'Gerente Barbearia Centro', email: 'gerente.centro@barber.com', role: 'manager', barbershopId: 'shop-1' },
-];
-
 export const barbershops: Barbershop[] = [
     { id: 'shop-1', name: 'Barbearia Centro' },
     { id: 'shop-2', name: 'Barbearia Filial' },

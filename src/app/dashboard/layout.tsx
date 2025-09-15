@@ -39,6 +39,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { users } from '@/lib/data';
 import { logout } from '@/services/auth';
+import { useEffect, useState } from 'react';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Relatórios' },
@@ -51,11 +52,19 @@ const navItems = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const currentUser = users[0]; // Mock current user
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+useEffect(() => {
+  const storedUser = localStorage.getItem("user");
+  if (storedUser) {
+    setCurrentUser(JSON.parse(storedUser));
+  }
+}, []);
 
   const handleLogout = async () => {
     const endSession = await logout();
   };
+  
 
   return (
     <SidebarProvider>
@@ -80,15 +89,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
-          <DropdownMenu>
+          {currentUser && (
+            <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-start h-12">
                 <Avatar className="h-8 w-8 mr-2">
-                  <AvatarImage src={`https://picsum.photos/seed/${currentUser.id}/100/100`} />
+                  <AvatarImage src={`https://picsum.photos/seed/user-1/100/100`} />
                   <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col items-start">
-                  <span className="text-sm font-medium">{currentUser.name}</span>
+                  <span className="text-sm font-medium">{currentUser.name.charAt(0).toUpperCase() + currentUser.name.slice(1).toLowerCase()}</span>
                   <span className="text-xs text-muted-foreground">{currentUser.email}</span>
                 </div>
                 <ChevronDown className="ml-auto h-4 w-4" />
@@ -114,7 +124,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> 
+          )}
+          
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
