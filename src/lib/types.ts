@@ -34,7 +34,7 @@ export type Product = {
   _id?: string;
   name: string;
   price: number;
-  stock: number;
+  quantity: number;
   barbershopId: string;
 };
 

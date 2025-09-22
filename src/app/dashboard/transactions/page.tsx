@@ -24,19 +24,6 @@ export default function TransactionsPage() {
           filterPlaceholder="Filtrar por descrição..."
         />
       </div>
-      <div>
-        <Card className="sticky top-20">
-            <CardHeader>
-                <CardTitle className="font-headline">Entrada Rápida com IA</CardTitle>
-                <CardDescription>
-                    Descreva a transação e deixe a IA preencher os detalhes para você.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <SmartTransactionForm />
-            </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }

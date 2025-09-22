@@ -167,30 +167,6 @@ export default function ReportsPage() {
             ))}
           </div>
         )}
-
-        <div>
-          <Button onClick={handleGenerateInsights} disabled={isPending || !report}>
-            {isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Gerando...
-              </>
-            ) : (
-              <>
-                <Lightbulb className="mr-2 h-4 w-4" />
-                Gerar Insights com IA
-              </>
-            )}
-          </Button>
-
-          {insights && (
-            <Alert className="mt-4">
-              <Lightbulb className="h-4 w-4" />
-              <AlertTitle className="font-headline">Insights e Recomendações</AlertTitle>
-              <AlertDescription className="mt-2 whitespace-pre-wrap">{insights}</AlertDescription>
-            </Alert>
-          )}
-        </div>
       </div>
     </div>
   );

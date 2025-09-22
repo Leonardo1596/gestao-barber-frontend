@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { Product } from '@/lib/types';
 
-export const columns: ColumnDef<Product>[] = [
+export const columns: (onDelete: (product: Product) => void): ColumnDef<Product>[] = [
   {
     accessorKey: 'name',
     header: ({ column }) => {
@@ -39,7 +39,7 @@ export const columns: ColumnDef<Product>[] = [
     },
   },
   {
-    accessorKey: 'stock',
+    accessorKey: 'quantity',
     header: 'Estoque',
   },
   {
@@ -59,7 +59,7 @@ export const columns: ColumnDef<Product>[] = [
             <DropdownMenuItem onClick={() => navigator.clipboard.writeText(product.id)}>Copiar ID</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Editar</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">Excluir</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive" onClick={() => onDelete(product)}>Excluir</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
