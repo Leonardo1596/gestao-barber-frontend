@@ -35,7 +35,8 @@ export type Product = {
   name: string;
   price: number;
   quantity: number;
-  barbershopId: string;
+  description: string;
+  barbershop: string;
 };
 
 export type Appointment = {
