@@ -27,7 +27,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ProductForm } from './_components/product-from';
+import { ProductForm } from './_components/product-form';
 import { SaleForm } from './_components/sellProductDialog'
 
 export default function ProductsPage() {
@@ -125,7 +125,10 @@ export default function ProductsPage() {
           {selectedProduct && (
             <SaleForm
               product={selectedProduct}
-              onSuccess={() => setIsSaleModalOpen(false)}
+              onSuccess={() => {
+                fetchProducts();
+                setIsSaleModalOpen(false)
+              }}
             />
           )}
         </DialogContent>

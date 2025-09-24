@@ -98,6 +98,10 @@ export function SaleForm({ product, onSuccess }: SaleFormProps) {
       onSuccess();
     } catch (err) {
       console.error(err);
+      if (err.response.data.message) {
+        toast({ title: err.response.data.message, variant: 'destructive' });
+        return;
+      }
       toast({ title: 'Erro ao registrar venda', variant: 'destructive' });
     }
   }

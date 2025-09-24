@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useTransition } from 'react';
+import React, { useEffect, useState, useCallback, useTransition } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,6 +9,9 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Lightbulb, Loader2 } from 'lucide-react';
 import { generateReportInsights, GenerateReportInsightsInput } from '@/ai/flows/generate-report-insights';
 import api from '../../services/api';
+import { MonthSelector } from "./_components/MonthSelector";
+import { format, getDay, parseISO } from "date-fns";
+
 
 const reportLabels: Record<string, string> = {
   revenues: 'Receitas',
@@ -49,9 +52,13 @@ export default function ReportsPage() {
   const [barberList, setBarberList] = useState<any[]>([]);
   const [report, setReport] = useState<Record<string, number> | null>(null);
   const [selectedBarber, setSelectedBarber] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null); // agora vem do useEffect
+  const [user, setUser] = useState<any>(null);
+  const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | null>(null);
 
-  // Pega usuário do localStorage apenas no cliente
+  const handleWeekChange = useCallback((start: Date, end: Date) => {
+    setDateRange({ start, end });
+  }, []);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedUser = localStorage.getItem('user');
@@ -77,11 +84,15 @@ export default function ReportsPage() {
   // Fetch report
   const fetchReport = async () => {
     if (!user) return;
+    if (!dateRange) return;
+
+    const from = format(dateRange.start, "yyyy-MM-dd");
+    const to = format(dateRange.end, "yyyy-MM-dd");
 
     try {
       const url = selectedBarber
-        ? `/report-by-barber-and-period/barbershop/${user.barbershop}/${selectedBarber}/2025-09-10/2025-09-15`
-        : `/report-by-period/barbershop/${user.barbershop}/2025-09-08/2025-09-15`;
+        ? `/report-by-barber-and-period/barbershop/${user.barbershop}/${selectedBarber}/${from}/${to}`
+        : `/report-by-period/barbershop/${user.barbershop}/${from}/${to}`;
 
       const response = await api.get(url);
       setReport(response.data || {});
@@ -93,7 +104,7 @@ export default function ReportsPage() {
 
   useEffect(() => {
     fetchReport();
-  }, [selectedBarber, user]); // adiciona user como dependência
+  }, [selectedBarber, user, dateRange]); // adiciona user como dependência
 
   const handleGenerateInsights = () => {
     startTransition(async () => {
@@ -128,11 +139,14 @@ export default function ReportsPage() {
     });
   };
 
-  if (!user) return <div>Carregando...</div>; // espera pegar o user
+  if (!user) return <div>Carregando...</div>;
 
   return (
     <div>
       <PageHeader title="Relatórios">
+        <div className="flex flex-col md:flex-row justify-end items-end md:items-center gap-4">
+          <MonthSelector onRangeChange={handleWeekChange} />
+        </div>
         <div className="flex items-center gap-2">
           <Select
             onValueChange={(value) => setSelectedBarber(value === 'all' ? null : value)}
