@@ -55,7 +55,7 @@ export default function ReportsPage() {
   const [user, setUser] = useState<any>(null);
   const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | null>(null);
 
-  const handleWeekChange = useCallback((start: Date, end: Date) => {
+  const handleMonthChange = useCallback((start: Date, end: Date) => {
     setDateRange({ start, end });
   }, []);
 
@@ -104,7 +104,7 @@ export default function ReportsPage() {
 
   useEffect(() => {
     fetchReport();
-  }, [selectedBarber, user, dateRange]); // adiciona user como dependência
+  }, [selectedBarber, user, dateRange]);
 
   const handleGenerateInsights = () => {
     startTransition(async () => {
@@ -145,7 +145,7 @@ export default function ReportsPage() {
     <div>
       <PageHeader title="Relatórios">
         <div className="flex flex-col md:flex-row justify-end items-end md:items-center gap-4">
-          <MonthSelector onRangeChange={handleWeekChange} />
+          <MonthSelector onRangeChange={handleMonthChange} />
         </div>
         <div className="flex items-center gap-2">
           <Select

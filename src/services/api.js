@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create an Axios instance
 const api = axios.create({
-    baseURL: 'https://gestao-barber-backend.onrender.com', // Base URL of the API
+    baseURL: 'http://localhost:8000', // Base URL of the API
 });
 
 // Request interceptor: Automatically adds an authentication token

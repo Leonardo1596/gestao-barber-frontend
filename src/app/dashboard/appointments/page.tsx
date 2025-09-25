@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/page-header';
 import { PlusCircle } from 'lucide-react';
@@ -28,6 +28,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { MonthSelector } from "../_components/MonthSelector";
+import { format } from 'date-fns';
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -37,14 +39,29 @@ export default function AppointmentsPage() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isCompleteConfirmOpen, setIsCompleteConfirmOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | null>(null);
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
   async function fetchData() {
+    if (!user) return;
+    if (!dateRange) return;
+
+    const from = format(dateRange.start, "yyyy-MM-dd");
+    const to = format(dateRange.end, "yyyy-MM-dd");
+
     try {
-      const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
       if (user && user.barbershop) {
         const [appointmentsResponse, barbersResponse, servicesResponse] = await Promise.all([
-          api.get(`/appointments/barbershop/${user.barbershop}`),
+          // api.get(`/appointments/barbershop/${user.barbershop}`),
+          api.get(`/appointments-by-date/barbershop/${user.barbershop}?startDate=${from}&endDate=${to}`),
           api.get(`/barbers/barbershop/${user.barbershop}`),
           api.get(`/services/barbershop/${user.barbershop}`),
         ]);
@@ -64,7 +81,7 @@ export default function AppointmentsPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [user, dateRange]);
 
   const handleFormSuccess = () => {
     fetchData();
@@ -75,7 +92,7 @@ export default function AppointmentsPage() {
     setSelectedAppointment(appointment);
     setIsDeleteConfirmOpen(true);
   };
-  
+
   const openCompleteConfirm = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
     setIsCompleteConfirmOpen(true);
@@ -106,7 +123,7 @@ export default function AppointmentsPage() {
 
   const handleCompleteAppointment = async () => {
     if (!selectedAppointment) return;
-    
+
     try {
       await api.put(`/update-appointment/${selectedAppointment._id}`, { status: 'concluido' });
       toast({
@@ -129,9 +146,16 @@ export default function AppointmentsPage() {
 
   const columns = getColumns(barbers, services, openDeleteConfirm, openCompleteConfirm);
 
+  const handleMonthChange = useCallback((start: Date, end: Date) => {
+    setDateRange({ start, end });
+  }, []);
+
   return (
     <div>
       <PageHeader title="Agendamentos">
+        <div className="flex flex-col md:flex-row justify-end items-end md:items-center gap-4">
+          <MonthSelector onRangeChange={handleMonthChange} />
+        </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
