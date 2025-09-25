@@ -29,6 +29,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ProductForm } from './_components/product-form';
 import { SaleForm } from './_components/sellProductDialog'
+import { fetchProducts } from '@/lib/fetcher';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -38,20 +39,11 @@ export default function ProductsPage() {
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
   const { toast } = useToast();
 
-  async function fetchProducts() {
-    try {
-      const user = localStorage.getItem('user')
-        ? JSON.parse(localStorage.getItem('user')!)
-        : null;
-      const response = await api.get(`/products/barbershop/${user.barbershop}`);
-      setProducts(response.data);
-    } catch (error) {
-      console.error('Failed to fetch products:', error);
-    }
-  }
-
   useEffect(() => {
-    fetchProducts();
+    // Fetch products
+    fetchProducts().then((data) => {
+      setProducts(data);
+    });
   }, []);
 
   function handleDeleteProduct(product: Product) {
@@ -70,7 +62,9 @@ export default function ProductsPage() {
     try {
       await api.delete(`/delete-product/${selectedProduct._id}`);
       toast({ title: 'Produto excluído com sucesso.' });
-      setProducts(products.filter((p) => p._id !== selectedProduct._id));
+      fetchProducts().then((data) => {
+        setProducts(data);
+      });
     } catch (error) {
       console.error('Erro ao excluir produto:', error);
       toast({ title: 'Erro ao excluir produto.', variant: 'destructive' });
@@ -81,7 +75,9 @@ export default function ProductsPage() {
   }
 
   const handleFormSuccess = () => {
-    fetchProducts();
+    fetchProducts().then((data) => {
+      setProducts(data);
+    });
     setIsDialogOpen(false);
   };
 
@@ -126,7 +122,9 @@ export default function ProductsPage() {
             <SaleForm
               product={selectedProduct}
               onSuccess={() => {
-                fetchProducts();
+                fetchProducts().then((data) => {
+                  setProducts(data);
+                });
                 setIsSaleModalOpen(false)
               }}
             />

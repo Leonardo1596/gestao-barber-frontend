@@ -20,8 +20,9 @@ import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import api from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
+import { format, set } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { fetchBarbers } from '@/lib/fetcher';
 
 interface SaleFormProps {
   product: { _id: string; name: string };
@@ -59,20 +60,11 @@ export function SaleForm({ product, onSuccess }: SaleFormProps) {
   const watchedDate = useWatch({ control, name: 'date' });
 
   useEffect(() => {
-    async function fetchBarbers() {
-      try {
-        const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
-        if (!user?.barbershop) return;
-        const res = await api.get(`/barbers/barbershop/${user.barbershop}`);
-        setBarbers(res.data);
-      } catch (err) {
-        console.error(err);
-        toast({ title: 'Erro ao buscar barbeiros', variant: 'destructive' });
-      } finally {
-        setLoadingBarbers(false);
-      }
-    }
-    fetchBarbers();
+    // Fetch barbers
+    fetchBarbers().then((data) => {
+      setBarbers(data);
+      setLoadingBarbers(false);
+    });
   }, [toast]);
 
   async function onSubmit(data: FormValues) {

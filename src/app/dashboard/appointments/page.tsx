@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { MonthSelector } from "../_components/MonthSelector";
-import { format } from 'date-fns';
+import { fetchAppointments, fetchBarbers, fetchServices } from '@/lib/fetcher';
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -39,52 +39,27 @@ export default function AppointmentsPage() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isCompleteConfirmOpen, setIsCompleteConfirmOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-  const [user, setUser] = useState<any>(null);
   const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) setUser(JSON.parse(storedUser));
-    }
-  }, []);
-
-  async function fetchData() {
-    if (!user) return;
     if (!dateRange) return;
-
-    const from = format(dateRange.start, "yyyy-MM-dd");
-    const to = format(dateRange.end, "yyyy-MM-dd");
-
-    try {
-      if (user && user.barbershop) {
-        const [appointmentsResponse, barbersResponse, servicesResponse] = await Promise.all([
-          // api.get(`/appointments/barbershop/${user.barbershop}`),
-          api.get(`/appointments-by-date/barbershop/${user.barbershop}?startDate=${from}&endDate=${to}`),
-          api.get(`/barbers/barbershop/${user.barbershop}`),
-          api.get(`/services/barbershop/${user.barbershop}`),
-        ]);
-        setAppointments(appointmentsResponse.data);
-        setBarbers(barbersResponse.data);
-        setServices(servicesResponse.data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch data:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao buscar dados',
-        description: 'Não foi possível carregar os dados. Tente novamente.',
-      });
-    }
-  }
-
-  useEffect(() => {
-    fetchData();
-  }, [user, dateRange]);
+    Promise.all([
+      fetchAppointments(dateRange.start, dateRange.end),
+      fetchBarbers(),
+      fetchServices(),
+    ]).then(([appointmentsData, barbersData, servicesData]) => {
+      setAppointments(appointmentsData);
+      setBarbers(barbersData);
+      setServices(servicesData);
+    });
+  }, [dateRange]);
 
   const handleFormSuccess = () => {
-    fetchData();
+    if (!dateRange) return;
+    fetchAppointments(dateRange.start, dateRange.end).then((data) => {
+      setAppointments(data);
+    });
     setIsDialogOpen(false);
   };
 
@@ -107,7 +82,10 @@ export default function AppointmentsPage() {
         title: 'Agendamento Excluído',
         description: 'O agendamento foi excluído com sucesso.',
       });
-      fetchData();
+      if (!dateRange) return;
+      fetchAppointments(dateRange.start, dateRange.end).then((data) => {
+        setAppointments(data);
+      });
     } catch (error) {
       console.error('Failed to delete appointment:', error);
       toast({
@@ -130,7 +108,10 @@ export default function AppointmentsPage() {
         title: 'Agendamento Concluído',
         description: 'O agendamento foi marcado como concluído e a transação foi criada.',
       });
-      fetchData();
+      if (!dateRange) return;
+      fetchAppointments(dateRange.start, dateRange.end).then((data) => {
+        setAppointments(data);
+      });
     } catch (error) {
       console.error('Failed to complete appointment:', error);
       toast({

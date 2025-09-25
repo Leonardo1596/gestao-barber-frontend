@@ -12,6 +12,8 @@ import api from '../../services/api';
 import { MonthSelector } from "./_components/MonthSelector";
 import { format, getDay, parseISO } from "date-fns";
 
+import { fetchBarbers, fetchReport } from '../../lib/fetcher';
+
 
 const reportLabels: Record<string, string> = {
   revenues: 'Receitas',
@@ -59,6 +61,8 @@ export default function ReportsPage() {
     setDateRange({ start, end });
   }, []);
 
+  // console.log(dateRange);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedUser = localStorage.getItem('user');
@@ -66,45 +70,18 @@ export default function ReportsPage() {
     }
   }, []);
 
-  // Fetch barbers
   useEffect(() => {
-    if (!user) return;
+    // Fetch barbers
+    fetchBarbers().then((data) => {
+      setBarberList(data);
+    });
 
-    async function fetchBarbers() {
-      try {
-        const response = await api.get(`barbers/barbershop/${user.barbershop}`);
-        setBarberList(response.data || []);
-      } catch (err) {
-        console.error('Erro ao buscar barbeiros:', err);
-      }
-    }
-    fetchBarbers();
-  }, [user]);
-
-  // Fetch report
-  const fetchReport = async () => {
-    if (!user) return;
+    // Fetch report
     if (!dateRange) return;
-
-    const from = format(dateRange.start, "yyyy-MM-dd");
-    const to = format(dateRange.end, "yyyy-MM-dd");
-
-    try {
-      const url = selectedBarber
-        ? `/report-by-barber-and-period/barbershop/${user.barbershop}/${selectedBarber}/${from}/${to}`
-        : `/report-by-period/barbershop/${user.barbershop}/${from}/${to}`;
-
-      const response = await api.get(url);
-      setReport(response.data || {});
-    } catch (err) {
-      console.error('Erro ao buscar report:', err);
-      setReport({});
-    }
-  };
-
-  useEffect(() => {
-    fetchReport();
-  }, [selectedBarber, user, dateRange]);
+    fetchReport(dateRange.start, dateRange.end, selectedBarber).then((data) => {
+      setReport(data);
+    });
+  }, [dateRange, selectedBarber]);
 
   const handleGenerateInsights = () => {
     startTransition(async () => {

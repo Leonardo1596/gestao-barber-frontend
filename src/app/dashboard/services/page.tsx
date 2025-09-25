@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { fetchServices } from '../../../lib/fetcher';
 
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
@@ -36,24 +37,17 @@ export default function ServicesPage() {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const { toast } = useToast();
 
-  async function fetchServices() {
-    try {
-      const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
-      if (user && user.barbershop) {
-        const response = await api.get(`/services/barbershop/${user.barbershop}`);
-        setServices(response.data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch services:', error);
-    }
-  }
-
   useEffect(() => {
-    fetchServices();
+    // Fetch services
+    fetchServices().then((data) => {
+      setServices(data);
+    });
   }, []);
 
   const handleFormSuccess = () => {
-    fetchServices();
+    fetchServices().then((data) => {
+      setServices(data);
+    });
     setIsDialogOpen(false);
   };
 
@@ -71,7 +65,9 @@ export default function ServicesPage() {
         title: 'Serviço Excluído',
         description: 'O serviço foi excluído com sucesso.',
       });
-      fetchServices();
+      fetchServices().then((data) => {
+      setServices(data);
+    });
     } catch (error) {
       console.error('Failed to delete service:', error);
       toast({
