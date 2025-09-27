@@ -79,7 +79,7 @@ export default function LoginPage() {
       </div>
       <div className="hidden bg-muted lg:block">
         <Image
-          src="https://picsum.photos/seed/barber-login/1920/1080"
+          src="https://images.unsplash.com/photo-1672257493395-c6cb634397e2?q=80&w=1962&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D/1920/1080"
           alt="Barbershop"
           data-ai-hint="barbershop interior"
           width="1920"
