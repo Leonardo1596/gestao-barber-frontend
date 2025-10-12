@@ -6,7 +6,6 @@ import { PageHeader } from '@/components/page-header';
 import { PlusCircle } from 'lucide-react';
 import { DataTable } from '@/components/data-table';
 import { getColumns } from './columns';
-import api from '@/services/api';
 import type { Service } from '@/lib/types';
 import {
   Dialog,
@@ -28,7 +27,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { fetchServices } from '../../../lib/fetcher';
+import { fetchServices, deleteService } from '@/lib/fetcher';
 
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
@@ -38,17 +37,18 @@ export default function ServicesPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Fetch services
-    fetchServices().then((data) => {
-      setServices(data);
-    });
+    fetchServices().then((data) => setServices(data));
   }, []);
 
   const handleFormSuccess = () => {
-    fetchServices().then((data) => {
-      setServices(data);
-    });
+    fetchServices().then((data) => setServices(data));
+    setSelectedService(null);
     setIsDialogOpen(false);
+  };
+
+  const handleEditService = (service: Service) => {
+    setSelectedService(service);
+    setIsDialogOpen(true);
   };
 
   const openDeleteConfirm = (service: Service) => {
@@ -60,19 +60,22 @@ export default function ServicesPage() {
     if (!selectedService) return;
 
     try {
-      await api.delete(`/delete-service/${selectedService._id}`);
-      toast({
-        title: 'Serviço Excluído',
-        description: 'O serviço foi excluído com sucesso.',
-      });
-      fetchServices().then((data) => {
-      setServices(data);
-    });
+      const success = await deleteService(selectedService);
+      if (success) {
+        toast({ title: 'Serviço excluído com sucesso.' });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao excluir serviço.',
+        });
+      }
+
+      fetchServices().then((data) => setServices(data));
     } catch (error) {
       console.error('Failed to delete service:', error);
       toast({
         variant: 'destructive',
-        title: 'Erro ao Excluir',
+        title: 'Erro ao excluir serviço.',
         description: 'Não foi possível excluir o serviço. Tente novamente.',
       });
     } finally {
@@ -80,32 +83,48 @@ export default function ServicesPage() {
       setSelectedService(null);
     }
   };
-  
-  const columns = getColumns(openDeleteConfirm);
+
+  const columns = getColumns(openDeleteConfirm, handleEditService);
 
   return (
     <div>
       <PageHeader title="Serviços">
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) setSelectedService(null);
+          }}
+        >
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={() => setSelectedService(null)}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Novo Serviço
             </Button>
           </DialogTrigger>
+
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Novo Serviço</DialogTitle>
+              <DialogTitle>
+                {selectedService ? 'Editar Serviço' : 'Novo Serviço'}
+              </DialogTitle>
               <DialogDescription>
-                Preencha os detalhes abaixo para adicionar um novo serviço.
+                Preencha os detalhes abaixo para{' '}
+                {selectedService ? 'editar o serviço selecionado' : 'adicionar um novo serviço'}.
               </DialogDescription>
             </DialogHeader>
-            <ServiceForm onSuccess={handleFormSuccess} />
+
+            <ServiceForm
+              key={selectedService?._id || 'new-service-form'}
+              onSuccess={handleFormSuccess}
+              service={selectedService}
+            />
           </DialogContent>
         </Dialog>
       </PageHeader>
-      <DataTable 
-        columns={columns} 
+
+      <DataTable
+        columns={columns}
         data={services}
         filterColumn="name"
         filterPlaceholder="Filtrar por nome..."
@@ -116,8 +135,7 @@ export default function ServicesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
             <AlertDialogDescription>
-              Essa ação não pode ser desfeita. Isso excluirá permanentemente o serviço
-              e removerá seus dados de nossos servidores.
+              Essa ação não pode ser desfeita. Isso excluirá permanentemente o serviço.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

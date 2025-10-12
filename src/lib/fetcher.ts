@@ -77,3 +77,126 @@ export async function fetchAppointments(startDate: Date, endDate: Date) {
         console.error('Erro ao buscar agendamentos:', err);
     }
 };
+
+// Create product
+export async function createProduct(product: any) {
+    console.log('passou aqui');
+    try {
+        await api.post('/create-product', product);
+        return true;
+    } catch (err) {
+        console.error("Erro ao criar produto:", err);
+        return false;
+    }
+};
+
+// Delete product
+export async function deleteProduct(selectedProduct?: any) {
+    if (!selectedProduct) return false;
+
+    try {
+        await api.delete(`/delete-product/${selectedProduct._id}`);
+        return true;
+    } catch (err) {
+        console.error("Erro ao excluir produto:", err);
+        return false;
+    }
+};
+
+// Update Product
+export async function updateProduct(selectedProduct?: any, updatedProduct?: any) {
+    if (!selectedProduct) return false;
+
+    try {
+        await api.put(`/update-product/${selectedProduct._id}`, updatedProduct);
+        return true;
+    } catch (err) {
+        console.error("Erro ao atualizar produto:", err);
+        return false;
+    }
+};
+
+// Create barber
+export async function createBarber(barber: any) {
+    try {
+        await api.post('/create-barber', barber);
+        return true;
+    } catch (err) {
+        console.error("Erro ao criar barbeiro:", err);
+        return false;
+    }
+};
+
+// Create service
+export async function createService(service: any) {
+    try {
+        await api.post('/create-service', service);
+        return true;
+    } catch (err) {
+        console.error("Erro ao criar serviço:", err);
+        return false;
+    }
+};
+
+// Delete service
+export async function deleteService(selectedService?: any) {
+    if (!selectedService) return false;
+
+    try {
+        await api.delete(`/delete-service/${selectedService._id}`);
+        return true;
+    } catch (err) {
+        console.error("Erro ao excluir serviço:", err);
+        return false;
+    }
+};
+
+// Update service
+export async function updateService(selectedService?: any, updatedService?: any) {
+    if (!selectedService) return false;
+
+    try {
+        await api.put(`/update-service/${selectedService._id}`, updatedService);
+        return true;
+    } catch (err) {
+        console.error("Erro ao atualizar serviço:", err);
+        return false;
+    }
+};
+
+// Create appointment
+export async function createAppointment(appointment: any) {
+    try {
+        await api.post('/create-appointment', appointment);
+        return true;
+    } catch (err) {
+        console.error("Erro ao criar agendamento:", err);
+        return false;
+    }
+};
+
+// Delete appointment
+export async function deleteAppointment(selectedAppointment?: any) {
+    if (!selectedAppointment) return false;
+
+    try {
+        await api.delete(`/delete-appointment/${selectedAppointment._id}`);
+        return true;
+    } catch (err) {
+        console.error("Erro ao excluir agendamento:", err);
+        return false;
+    }
+};
+
+// Update appointment
+export async function updateAppointment(selectedAppointment?: any, updatedAppointment?: any) {
+    if (!selectedAppointment) return false;
+
+    try {
+        await api.put(`/update-appointment/${selectedAppointment._id}`, updatedAppointment);
+        return true;
+    } catch (err) {
+        console.error("Erro ao atualizar agendamento:", err);
+        return false;
+    }
+};

@@ -16,6 +16,8 @@ import { Input } from '@/components/ui/input';
 import api from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import type { Product } from '@/lib/types';
+import { useEffect } from 'react';
+import { createProduct, updateProduct } from '@/lib/fetcher';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome do produto é obrigatório.'),
@@ -24,8 +26,8 @@ const formSchema = z.object({
   }),
   quantity: z
     .string()
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: 'Quantidade deve ser maior que 0.',
+    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: 'Quantidade deve ser maior ou igual a 0.',
     }),
   description: z.string().min(1, 'Descrição é obrigatória.'),
 });
@@ -34,22 +36,42 @@ type FormValues = z.infer<typeof formSchema>;
 
 type ProductFormProps = {
   onSuccess: () => void;
+  product?: Product;
 };
 
-export function ProductForm({ onSuccess }: ProductFormProps) {
+export function ProductForm({ onSuccess, product }: ProductFormProps) {
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    // Inicialização direta do defaultValues:
     defaultValues: {
-      name: '',
-      price: '',
-      quantity: '',
-      description: '',
+      name: product?.name || '',
+      price: product?.price?.toString() || '',
+      quantity: product?.quantity?.toString() || '',
+      description: product?.description || '',
     },
   });
 
   const { isSubmitting } = form.formState;
+
+  useEffect(() => {
+    if (product) {
+      form.reset({
+        name: product.name,
+        price: product.price?.toString() || '',
+        quantity: product.quantity?.toString() || '',
+        description: product.description || '',
+      });
+    } else {
+      form.reset({
+        name: '',
+        price: '',
+        quantity: '',
+        description: '',
+      });
+    }
+  }, [product, form]);
 
   async function onSubmit(data: FormValues) {
     try {
@@ -74,21 +96,33 @@ export function ProductForm({ onSuccess }: ProductFormProps) {
         barbershop: user.barbershop,
       };
 
-      await api.post('/create-product', payload);
+      if (product) {
+        // Edit existing product
+        const success = await updateProduct(product, payload);
+        if (success) {
+          toast({ title: "Produto excluído com sucesso." });
+        } else {
+          toast({ title: "Erro ao excluir produto.", variant: "destructive" });
+        }
+      } else {
 
-      toast({
-        title: 'Produto Criado',
-        description: 'O novo produto foi adicionado com sucesso.',
-      });
+        // Create new product
+        const success = await createProduct(payload);
+        if (success) {
+          toast({ title: "Produto craido com sucesso." });
+        } else {
+          toast({ title: "Erro ao criar produto.", variant: "destructive" });
+        }
+      }
 
       form.reset();
       onSuccess();
     } catch (error) {
-      console.error('Erro ao criar produto:', error);
+      console.error('Erro ao salvar produto:', error);
       toast({
         variant: 'destructive',
-        title: 'Erro ao Criar Produto',
-        description: 'Não foi possível criar o produto. Tente novamente.',
+        title: 'Erro',
+        description: 'Não foi possível salvar o produto. Tente novamente.',
       });
     }
   }
@@ -129,7 +163,7 @@ export function ProductForm({ onSuccess }: ProductFormProps) {
           name="quantity"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Quantidade</FormLabel>
+              <FormLabel>Quantidade em Estoque</FormLabel>
               <FormControl>
                 <Input placeholder="0" type="number" {...field} />
               </FormControl>
@@ -153,7 +187,7 @@ export function ProductForm({ onSuccess }: ProductFormProps) {
         />
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? 'Salvando...' : 'Adicionar Produto'}
+          {isSubmitting ? (product ? 'Salvando...' : 'Adicionando...') : product ? 'Atualizar Produto' : 'Adicionar Produto'}
         </Button>
       </form>
     </Form>

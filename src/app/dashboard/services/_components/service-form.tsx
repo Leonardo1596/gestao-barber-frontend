@@ -13,9 +13,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import api from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { createService, updateService } from '@/lib/fetcher';
+import type { Service } from '@/lib/types';
+import { useEffect } from 'react';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório.'),
@@ -27,20 +29,44 @@ type FormValues = z.infer<typeof formSchema>;
 
 type ServiceFormProps = {
   onSuccess: () => void;
-}
+  service?: Service;
+};
 
-export function ServiceForm({ onSuccess }: ServiceFormProps) {
+export function ServiceForm({ onSuccess, service }: ServiceFormProps) {
   const { toast } = useToast();
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: service?.name || '',
+      price: service?.price || 0,
+      duration: service?.duration || 0,
+    },
   });
 
   const { isSubmitting } = form.formState;
+  const { reset } = form;
+
+  useEffect(() => {
+    if (service) {
+      reset({
+        name: service.name,
+        price: service.price,
+        duration: service.duration,
+      });
+    } else {
+      reset({
+        name: '',
+        price: 0,
+        duration: 0,
+      });
+    }
+  }, [service, reset]);
 
   async function onSubmit(data: FormValues) {
     try {
       const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
-      if (!user || !user.barbershop) {
+      if (!user?.barbershop) {
         toast({
           variant: 'destructive',
           title: 'Erro',
@@ -54,20 +80,33 @@ export function ServiceForm({ onSuccess }: ServiceFormProps) {
         barbershopId: user.barbershop,
       };
 
-      await api.post('/create-service', payload);
+      if (service) {
+        console.log('caiu aqui');
+        // Edit
+        const success = await updateService(service, payload);
+        if (success) {
+          toast({ title: 'Serviço Atualizado', description: 'O serviço foi atualizado com sucesso.' });
+        } else {
+          toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível atualizar o serviço.' });
+        }
+      } else {
+        // Create
+        const success = await createService(payload);
+        if (success) {
+          toast({ title: 'Serviço Criado', description: 'O novo serviço foi adicionado com sucesso.' });
+        } else {
+          toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível criar o serviço.' });
+        }
+      }
 
-      toast({
-        title: 'Serviço Criado',
-        description: 'O novo serviço foi adicionado com sucesso.',
-      });
-      form.reset({name: '', price: 0, duration: 0});
+      reset({ name: '', price: 0, duration: 0 });
       onSuccess();
     } catch (error) {
-      console.error('Failed to create service:', error);
+      console.error('Erro ao salvar serviço:', error);
       toast({
         variant: 'destructive',
-        title: 'Erro ao Criar Serviço',
-        description: 'Não foi possível criar o serviço. Tente novamente.',
+        title: 'Erro',
+        description: 'Não foi possível salvar o serviço. Tente novamente.',
       });
     }
   }
@@ -115,7 +154,7 @@ export function ServiceForm({ onSuccess }: ServiceFormProps) {
           )}
         />
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-           {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : 'Criar Serviço'}
+          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : service ? 'Atualizar Serviço' : 'Criar Serviço'}
         </Button>
       </form>
     </Form>

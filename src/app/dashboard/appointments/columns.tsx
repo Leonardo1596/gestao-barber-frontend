@@ -18,7 +18,8 @@ export const getColumns = (
   barbers: Barber[],
   services: Service[],
   onDelete: (appointment: Appointment) => void,
-  onComplete: (appointment: Appointment) => void
+  onComplete: (appointment: Appointment) => void,
+  onEdit: (appointment: Appointment) => void,
 ): ColumnDef<Appointment>[] => [
     {
       accessorKey: 'clientName',
@@ -118,7 +119,7 @@ export const getColumns = (
                   Marcar como Concluído
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem>Editar</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(appointment)}>Editar</DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive"
                 onClick={() => onDelete(appointment)}

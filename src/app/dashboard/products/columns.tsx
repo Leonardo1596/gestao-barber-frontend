@@ -15,6 +15,7 @@ import type { Product } from '@/lib/types';
 
 export function getColumns(
   onDelete: (product: Product) => void,
+  onEdit: (product: Product) => void,
   onSell: (product: Product) => void
 ): ColumnDef<Product>[] {
   return [
@@ -68,13 +69,14 @@ export function getColumns(
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Ações</DropdownMenuLabel>
               <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(product.id)}
+                // Assumindo que o ID é uma string
+                onClick={() => navigator.clipboard.writeText(product._id || product.id)}
               >
                 Copiar ID
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onSell(product)}>Efetuar venda</DropdownMenuItem>
-              <DropdownMenuItem>Editar</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(product)}>Editar</DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive"
                 onClick={() => onDelete(product)}

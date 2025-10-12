@@ -16,6 +16,8 @@ import { Input } from '@/components/ui/input';
 import api from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { createBarber } from '@/lib/fetcher'
+import { create } from 'domain';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório.'),
@@ -52,12 +54,13 @@ export function BarberForm({ onSuccess }: BarberFormProps) {
         barbershop: user.barbershop,
       };
 
-      await api.post('/create-barber', payload);
+      const success = await createBarber(payload);
+      if (success) {
+        toast({ title: "Barbeiro criado.", description: 'O novo barbeiro foi adicionado com sucesso.', });
+      } else {
+        toast({ title: "Erro ao criado barbeiro.", description: 'Não foi possível criar o barbeiro. Tente novamente.', variant: "destructive" });
+      }
 
-      toast({
-        title: 'Barbeiro Criado',
-        description: 'O novo barbeiro foi adicionado com sucesso.',
-      });
       form.reset({name: ''});
       onSuccess();
     } catch (error) {

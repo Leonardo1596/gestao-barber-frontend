@@ -7,7 +7,6 @@ import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { getColumns } from './columns';
 import type { Product } from '@/lib/types';
-import api from '@/services/api';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,7 +28,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ProductForm } from './_components/product-form';
 import { SaleForm } from './_components/sellProductDialog'
-import { fetchProducts } from '@/lib/fetcher';
+import { fetchProducts, deleteProduct } from '@/lib/fetcher';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -46,6 +45,11 @@ export default function ProductsPage() {
     });
   }, []);
 
+  function handleEditProduct(product: Product) {
+    setSelectedProduct(product);
+    setIsDialogOpen(true);
+  };
+
   function handleDeleteProduct(product: Product) {
     setSelectedProduct(product);
     setIsConfirmOpen(true);
@@ -58,53 +62,65 @@ export default function ProductsPage() {
 
   async function confirmDelete() {
     if (!selectedProduct) return;
+    const success = await deleteProduct(selectedProduct);
 
-    try {
-      await api.delete(`/delete-product/${selectedProduct._id}`);
-      toast({ title: 'Produto excluído com sucesso.' });
+    if (success) {
+      toast({ title: "Produto excluído com sucesso." });
       fetchProducts().then((data) => {
         setProducts(data);
       });
-    } catch (error) {
-      console.error('Erro ao excluir produto:', error);
-      toast({ title: 'Erro ao excluir produto.', variant: 'destructive' });
-    } finally {
-      setIsConfirmOpen(false);
-      setSelectedProduct(null);
+    } else {
+      toast({ title: "Erro ao excluir produto.", variant: "destructive" });
     }
+
+    setIsConfirmOpen(false);
+    setSelectedProduct(null);
   }
 
   const handleFormSuccess = () => {
     fetchProducts().then((data) => {
       setProducts(data);
     });
+    setSelectedProduct(null); 
     setIsDialogOpen(false);
   };
 
   return (
     <div>
       <PageHeader title="Produtos">
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog 
+          open={isDialogOpen} 
+          onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) {
+                setSelectedProduct(null); 
+            }
+          }}
+        >
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={() => setSelectedProduct(null)}> 
               <PlusCircle className="mr-2 h-4 w-4" />
               Novo Produto
             </Button>
           </DialogTrigger>
           <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Novo Produto</DialogTitle>
+              <DialogTitle>{selectedProduct ? 'Editar Produto' : 'Novo Produto'}</DialogTitle>
               <DialogDescription>
-                Preencha os dados abaixo para adicionar um novo produto.
+                Preencha os dados abaixo para {selectedProduct ? 'editar o produto selecionado' : 'adicionar um novo produto'}.
               </DialogDescription>
             </DialogHeader>
-            <ProductForm onSuccess={handleFormSuccess} />
+            <ProductForm 
+              key={selectedProduct?._id || 'new-product-form'} 
+              onSuccess={handleFormSuccess} 
+              product={selectedProduct} 
+            />
           </DialogContent>
         </Dialog>
       </PageHeader>
 
       <DataTable
-        columns={getColumns(handleDeleteProduct, handleSellProduct)}
+        columns={getColumns(handleDeleteProduct, handleEditProduct, handleSellProduct)}
         data={products}
         filterColumn="name"
         filterPlaceholder="Filtrar por nome..."

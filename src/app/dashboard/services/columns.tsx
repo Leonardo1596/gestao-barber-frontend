@@ -13,17 +13,18 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { Service } from '@/lib/types';
 
-export const getColumns = (onDelete: (service: Service) => void): ColumnDef<Service>[] => [
+export const getColumns = (
+  onDelete: (service: Service) => void,
+  onEdit: (service: Service) => void
+): ColumnDef<Service>[] => [
   {
     accessorKey: 'name',
-    header: ({ column }) => {
-      return (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-          Nome
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    header: ({ column }) => (
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+        Nome
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
   },
   {
     accessorKey: 'price',
@@ -56,9 +57,11 @@ export const getColumns = (onDelete: (service: Service) => void): ColumnDef<Serv
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Ações</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(service.id)}>Copiar ID</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(service.id)}>
+              Copiar ID
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Editar</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEdit(service)}>Editar</DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
               onClick={() => onDelete(service)}

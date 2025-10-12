@@ -4,25 +4,32 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { login } from '../services/auth';
 
 export default function LoginPage() {
   const router = useRouter();
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('user');
+
+      if (storedUser) {
+        router.push('/dashboard');
+      }
+    }
+  }, []);
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login logic
     try {
       const user = await login(email, password);
-      console.log('Usuário logado:', user);
 
       router.push('/dashboard');
     } catch (err) {
