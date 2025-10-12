@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useTransition } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import {
@@ -12,6 +12,9 @@ import {
 } from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { MonthSelector } from "./_components/MonthSelector";
+// Assuming these are placeholders for your actual fetch functions
+// In a real application, you'd need to ensure the correct path.
+// For this example, I'll keep the relative path as provided.
 import { fetchBarbers, fetchReport } from "../../lib/fetcher";
 
 const reportLabels: Record<string, string> = {
@@ -68,25 +71,18 @@ export default function ReportsPage() {
 		if (typeof window !== "undefined") {
 			const storedUser = localStorage.getItem("user");
 			if (storedUser) setUser(JSON.parse(storedUser));
-
-			if (!storedUser) {
-				router.push("/");
-			}
+			if (!storedUser) router.push("/");
 		}
-	}, []);
+	}, [router]);
 
 	useEffect(() => {
 		// Fetch barbers
-		fetchBarbers().then((data) => {
-			setBarberList(data);
-		});
+		fetchBarbers().then((data) => setBarberList(data));
 
 		// Fetch report
 		if (!dateRange) return;
 		fetchReport(dateRange.start, dateRange.end, selectedBarber).then(
-			(data) => {
-				setReport(data);
-			}
+			(data) => setReport(data)
 		);
 	}, [dateRange, selectedBarber]);
 
@@ -95,11 +91,20 @@ export default function ReportsPage() {
 	return (
 		<div>
 			<PageHeader title="Relatórios">
-				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-					<div className="flex flex-col md:flex-row justify-end items-end md:items-center gap-4">
+				{/* Updated filter container:
+                    - w-full: Takes full width.
+                    - flex flex-row: Ensures side-by-side layout (mobile first).
+                    - justify-start: Aligns to the left on mobile (below the title).
+                    - md:justify-end: Aligns to the right on desktop.
+                    - items-center: Vertically aligns the selector/dropdown.
+                    - gap-2: Spacing between filters.
+                    - mt-2: Small top margin to separate from the title.
+                */}
+				<div className="w-full flex flex-row justify-start items-center gap-2 mt-2 md:justify-end">
+					<div className="w-[140px] sm:w-[280px]">
 						<MonthSelector onRangeChange={handleMonthChange} />
 					</div>
-					<div className="flex items-center gap-2">
+					<div className="w-[120px] sm:w-[180px]">
 						<Select
 							onValueChange={(value) =>
 								setSelectedBarber(
@@ -107,7 +112,7 @@ export default function ReportsPage() {
 								)
 							}
 						>
-							<SelectTrigger className="w-[180px]">
+							<SelectTrigger className="w-full">
 								<SelectValue placeholder="Filtrar por barbeiro" />
 							</SelectTrigger>
 							<SelectContent>
@@ -128,7 +133,7 @@ export default function ReportsPage() {
 				</div>
 			</PageHeader>
 
-			<div className="space-y-6">
+			<div className="space-y-6 mt-4">
 				{report && Object.keys(reportLabels).length > 0 && (
 					<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 						{Object.keys(reportLabels).map((key) => (
