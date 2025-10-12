@@ -72,43 +72,20 @@ export function AppointmentForm({
 			clientName: appointment?.clientName,
 			barber: appointment?.barber,
 			serviceIds: appointment?.services || [],
-			date: new Date(appointment?.date || new Date()),
-			hour: appointment?.hour, // 👈 aqui
+			date: appointment?.date
+				? new Date(
+						new Date(appointment.date).getTime() +
+							new Date(appointment.date).getTimezoneOffset() *
+								60000
+				  )
+				: new Date(),
+			hour: appointment?.hour,
 			paymentMethod: appointment?.paymentMethod,
 		},
 	});
 
 	const { control, setValue, reset } = form;
 	const { isSubmitting } = form.formState;
-
-	// Preenche os campos ao editar
-	// useEffect(() => {
-	// 	if (appointment?.hour) {
-	// 		//     // const barber = barbers.find(barber => barber._id === appointment.barber);
-
-	// 		// reset({
-	// 		// 	hour: appointment.hour,
-	// 		// });
-
-	// 		// setValue("hour", appointment.hour);
-	// 		console.log("%%%%%", form.getValues());
-	// 	}
-
-	// 	console.log(">>>>>>>", appointment);
-
-	// 	//     console.log('%%%%%', form.getValues())
-
-	// 	//   } else {
-	// 	//     // reset({
-	// 	//     //   clientName: '',
-	// 	//     //   barber: "",
-	// 	//     //   serviceIds: [],
-	// 	//     //   date: undefined,
-	// 	//     //   hour: '',
-	// 	//     //   paymentMethod: undefined,
-	// 	//     // });
-	// 	//   }
-	// }, [appointment, reset]);
 
 	const [availableTimes, setAvailableTimes] = useState<string[]>([]);
 	const [loadingTimes, setLoadingTimes] = useState(false);
@@ -117,8 +94,6 @@ export function AppointmentForm({
 	const watchedDate = useWatch({ control, name: "date" });
 
 	useEffect(() => {
-		// setValue("hour", "");
-
 		if (!watchedBarberId || !watchedDate) {
 			setAvailableTimes([]);
 			setLoadingTimes(false);
