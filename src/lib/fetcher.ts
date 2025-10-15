@@ -78,6 +78,24 @@ export async function fetchAppointments(startDate: Date, endDate: Date) {
     }
 };
 
+export async function fetchTransactions(startDate: Date, endDate: Date) {
+    const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
+
+    const from = format(startDate, "yyyy-MM-dd");
+    const to = format(endDate, "yyyy-MM-dd");
+
+    if (!user) return;
+    try {
+        if (user && user.barbershop) {
+            const response = await api.get(`/transactions-by-period/barbershop/${user.barbershop}/${from}/${to}`);
+            console.log(response.data);
+            return response.data;
+        }
+    } catch (err) {
+        console.error('Erro ao buscar transações:', err);
+    }
+}
+
 // Create product
 export async function createProduct(product: any) {
     console.log('passou aqui');

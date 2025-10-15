@@ -1,98 +1,103 @@
-'use client';
+"use client";
 
-import { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, ArrowUpDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
-import type { Transaction } from '@/lib/types';
+import type { ColumnDef } from "@tanstack/react-table";
+import type { Appointment, Product, Expense, Barber } from "@/lib/types";
 
-export const columns: ColumnDef<Transaction>[] = [
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat("pt-BR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+};
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value);
+};
+
+export const getAppointmentColumns = (barbers: Barber[]): ColumnDef<Appointment>[] => [
   {
-    accessorKey: 'description',
-    header: 'Descrição',
+    accessorKey: "value",
+    header: "Valor",
+    cell: ({ row }) => formatCurrency(row.original.amount),
   },
   {
-    accessorKey: 'type',
-    header: 'Tipo',
-    cell: ({ row }) => {
-        const type = row.original.type;
-        const variant = type === 'revenue' ? 'default' : 'secondary';
-        const label = type === 'revenue' ? 'Receita' : 'Despesa';
-        return <Badge variant={variant}>{label}</Badge>
-    }
+    accessorKey: "description",
+    header: "Descrição",
   },
   {
-    accessorKey: 'amount',
-    header: ({ column }) => {
-        return (
-          <div className="text-right">
-            <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-              Valor
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        );
-      },
+    accessorKey: "date",
+    header: "Data",
+    cell: ({ row }) => formatDate(row.original.date),
+  },
+  {
+    accessorKey: "barberId",
+    header: "Barbeiro",
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue('amount'));
-      const formatted = new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-      }).format(amount);
-
-      return <div className="text-right font-medium">{formatted}</div>;
+      const barber = barbers.find((b) => b._id === row.original.barber);
+      return barber ? barber.name : "N/A";
     },
   },
   {
-    accessorKey: 'date',
-    header: 'Data',
-    cell: ({ row }) => {
-        const date = new Date(row.original.date);
-        const userTimezoneOffset = date.getTimezoneOffset() * 60000;
-        const adjustedDate = new Date(date.getTime() + userTimezoneOffset);
-        return new Intl.DateTimeFormat('pt-BR').format(adjustedDate);
-    }
+    accessorKey: "status",
+    header: "Status",
+  },
+];
+
+export const getProductColumns = (barbers: Barber[]): ColumnDef<Product>[] => [
+  {
+    accessorKey: "value",
+    header: "Valor",
+    cell: ({ row }) => formatCurrency(row.original.amount),
   },
   {
-    accessorKey: 'status',
-    header: 'Status',
+    accessorKey: "description",
+    header: "Descrição",
+  },
+  {
+    accessorKey: "date",
+    header: "Data",
+    cell: ({ row }) => formatDate(row.original.date),
+  },
+  {
+    accessorKey: "quantity",
+    header: "Quantidade",
+  },
+  {
+    accessorKey: "barberId",
+    header: "Barbeiro",
     cell: ({ row }) => {
-        const status = row.original.status;
-        let variant: 'default' | 'secondary' | 'destructive' = 'secondary';
-        if (status === 'Completo') variant = 'default';
-        if (status === 'Falhou') variant = 'destructive';
-        return <Badge variant={variant}>{status}</Badge>;
+      const barber = barbers.find((b) => b._id === row.original.barber);
+      return barber ? barber.name : "N/A";
     },
   },
   {
-    id: 'actions',
-    cell: ({ row }) => {
-      const transaction = row.original;
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Abrir menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Ações</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(transaction.id)}>Copiar ID</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Editar</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">Excluir</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
+    accessorKey: "status",
+    header: "Status",
+  },
+];
+
+export const getExpenseColumns = (): ColumnDef<Expense>[] => [
+  {
+    accessorKey: "value",
+    header: "Valor",
+    cell: ({ row }) => formatCurrency(row.original.amount),
+  },
+  {
+    accessorKey: "description",
+    header: "Descrição",
+  },
+  {
+    accessorKey: "date",
+    header: "Data",
+    cell: ({ row }) => formatDate(row.original.date),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
   },
 ];
