@@ -25,6 +25,7 @@ export default function LoginPage() {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +34,7 @@ export default function LoginPage() {
 
       router.push('/dashboard');
     } catch (err) {
-
+      setError('Email ou senha inválidos');
     }
   };
 
@@ -72,6 +73,7 @@ export default function LoginPage() {
               </div>
               <Input id="password" type="password" placeholder='senha' required value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
+            {error && <p className='text-red-500 text-sm'>{error}</p>}
             <Button type="submit" className="w-full">
               Login
             </Button>
