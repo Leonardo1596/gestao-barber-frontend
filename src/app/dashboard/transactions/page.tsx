@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { PageHeader } from "@/components/page-header";
@@ -12,12 +12,26 @@ import type { Appointment, Product, Expense, Barber } from "@/lib/types";
 import { MonthSelector } from "../_components/MonthSelector";
 import { fetchTransactions, fetchBarbers } from "@/lib/fetcher";
 import { Button } from "@/components/ui/button";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import api from "@/services/api";
 
 export default function TransactionsPage() {
 	const [appointments, setAppointments] = useState<Appointment[]>([]);
 	const [products, setProducts] = useState<Product[]>([]);
 	const [expenses, setExpenses] = useState<Expense[]>([]);
 	const [barbers, setBarbers] = useState<Barber[]>([]);
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [selectedTransaction, setSelectedTransaction] = useState<Appointment | Product | Expense | null>(null);
 	const [transactionType, setTransactionType] = useState<
 		"appointments" | "products" | "expenses"
 	>("appointments");
@@ -26,6 +40,8 @@ export default function TransactionsPage() {
 		start: Date;
 		end: Date;
 	} | null>(null);
+
+	const { toast } = useToast();
 
 	useEffect(() => {
 		if (!dateRange) return;
@@ -55,31 +71,75 @@ export default function TransactionsPage() {
 			setBarbers(barbersData || []);
 		});
 	}, [dateRange]);
-	console.log(appointments);
 
 	const handleMonthChange = useCallback((start: Date, end: Date) => {
 		setDateRange({ start, end });
 	}, []);
 
+	const openDeleteDialog = (transaction: Appointment | Product | Expense) => {
+		setSelectedTransaction(transaction);
+		setIsDeleteDialogOpen(true);
+	};
+
+	const handleDeleteTransaction = async () => {
+		if (!selectedTransaction) return;
+
+		try {
+			console.log(selectedTransaction._id)
+			await api.delete(`/delete-transaction/${selectedTransaction._id}`);
+			toast({
+				title: "Transação Excluída",
+				description: "A transação foi excluída com sucesso.",
+			});
+			if (dateRange) {
+				const transactionsData = await fetchTransactions(
+					dateRange.start,
+					dateRange.end
+				);
+				const appointmentsData = transactionsData.filter(
+					(t: any) => t.appointment
+				);
+				const productsData = transactionsData.filter((t: any) => t.quantity);
+				const expensesData = transactionsData.filter(
+					(t: any) => t.type === "saida"
+				);
+				setAppointments(appointmentsData);
+				setProducts(productsData);
+				setExpenses(expensesData);
+			}
+		} catch (error) {
+			console.error("Failed to delete transaction:", error);
+			toast({
+				variant: "destructive",
+				title: "Erro ao Excluir",
+				description:
+					"Não foi possível excluir a transação. Tente novamente.",
+			});
+		} finally {
+			setIsDeleteDialogOpen(false);
+			setSelectedTransaction(null);
+		}
+	};
+
 	const { columns, data, filterColumn, filterPlaceholder } = useMemo(() => {
 		switch (transactionType) {
 			case "appointments":
 				return {
-					columns: getAppointmentColumns(barbers),
+					columns: getAppointmentColumns(barbers, openDeleteDialog),
 					data: appointments,
 					filterColumn: "clientName",
 					filterPlaceholder: "Filtrar por cliente...",
 				};
 			case "products":
 				return {
-					columns: getProductColumns(barbers),
+					columns: getProductColumns(barbers, openDeleteDialog),
 					data: products,
 					filterColumn: "name",
 					filterPlaceholder: "Filtrar por produto...",
 				};
 			case "expenses":
 				return {
-					columns: getExpenseColumns(),
+					columns: getExpenseColumns(openDeleteDialog),
 					data: expenses,
 					filterColumn: "description",
 					filterPlaceholder: "Filtrar por descrição...",
@@ -126,10 +186,31 @@ export default function TransactionsPage() {
 
 			<DataTable
 				columns={columns as any}
-				data={data}
+				data={data as any[]}
 				filterColumn={filterColumn}
 				filterPlaceholder={filterPlaceholder}
 			/>
+
+			<AlertDialog
+				open={isDeleteDialogOpen}
+				onOpenChange={setIsDeleteDialogOpen}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+						<AlertDialogDescription>
+							Essa ação não pode ser desfeita. Isso excluirá
+							permanentemente a transação.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancelar</AlertDialogCancel>
+						<AlertDialogAction onClick={handleDeleteTransaction}>
+							Continuar
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }

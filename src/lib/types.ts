@@ -42,6 +42,15 @@ export type Product = {
 	barber: string;
 };
 
+export type Expense = {
+  id: string;
+  _id?: string;
+  description: string;
+  amount: number;
+  date: string;
+  status: string;
+};
+
 export type Appointment = {
 	id: string;
 	_id?: string;
