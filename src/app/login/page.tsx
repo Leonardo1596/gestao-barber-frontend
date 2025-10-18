@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
 import { useEffect, useState } from 'react';
-import { login } from '../services/auth';
+import { login } from '../../services/auth';
 
 export default function LoginPage() {
   const router = useRouter();
