@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal, ArrowUpDown } from "lucide-react";
@@ -10,6 +10,9 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import type { Appointment, Barber, Service } from "@/lib/types";
@@ -18,7 +21,7 @@ export const getColumns = (
 	barbers: Barber[],
 	services: Service[],
 	onDelete: (appointment: Appointment) => void,
-	onComplete: (appointment: Appointment) => void,
+	onComplete: (appointment: Appointment, paid: boolean) => void,
 	onEdit: (appointment: Appointment) => void
 ): ColumnDef<Appointment>[] => [
 	{
@@ -130,11 +133,13 @@ export const getColumns = (
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						{appointment.status === "agendado" && (
-							<DropdownMenuItem
-								onClick={() => onComplete(appointment)}
-							>
-								Marcar como Concluído
-							</DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Marcar como Concluído</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem onClick={() => onComplete(appointment, true)}>Pago</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onComplete(appointment, false)}>Não Pago</DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
 						)}
 						<DropdownMenuItem onClick={() => onEdit(appointment)}>
 							Editar

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,7 @@ export default function AppointmentsPage() {
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 	const [isCompleteConfirmOpen, setIsCompleteConfirmOpen] = useState(false);
+	const [paidStatus, setPaidStatus] = useState(false);
 	const [selectedAppointment, setSelectedAppointment] =
 		useState<Appointment | null>(null);
 	const [dateRange, setDateRange] = useState<{
@@ -82,8 +83,9 @@ export default function AppointmentsPage() {
 		setIsDeleteConfirmOpen(true);
 	};
 
-	const openCompleteConfirm = (appointment: Appointment) => {
+	const openCompleteConfirm = (appointment: Appointment, paid: boolean) => {
 		setSelectedAppointment(appointment);
+		setPaidStatus(paid);
 		setIsCompleteConfirmOpen(true);
 	};
 
@@ -119,11 +121,12 @@ export default function AppointmentsPage() {
 
 	const handleCompleteAppointment = async () => {
 		if (!selectedAppointment) return;
-
 		try {
 			await api.put(`/update-appointment/${selectedAppointment._id}`, {
 				status: "concluido",
+				transactionStatus: paidStatus ? "pago" : "pendente",
 			});
+
 			toast({
 				title: "Agendamento Concluído",
 				description:
@@ -229,19 +232,15 @@ export default function AppointmentsPage() {
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>
-							Marcar como Concluído?
-						</AlertDialogTitle>
+						<AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
 						<AlertDialogDescription>
-							Esta ação irá marcar o agendamento como concluído e
-							criar uma transação correspondente. Você confirma
-							esta ação?
+							Essa ação marcará o agendamento como concluído.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
 						<AlertDialogCancel>Cancelar</AlertDialogCancel>
 						<AlertDialogAction onClick={handleCompleteAppointment}>
-							Confirmar
+							Continuar
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
