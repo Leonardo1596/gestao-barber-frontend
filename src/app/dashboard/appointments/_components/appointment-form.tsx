@@ -112,10 +112,11 @@ export function AppointmentForm({
 		async function fetchAvailableTimes() {
 			setLoadingTimes(true);
 			setAvailableTimes([]);
+
 			try {
 				const formattedDate = format(watchedDate, "yyyy-MM-dd");
 				const res = await api.get(
-					`/available-times/${formattedDate}/${watchedBarberId}/${user.barbershop}`
+					`/available-times/${formattedDate}/${watchedBarberId}/${user.barbershop}?excludeId=${appointment?._id}`
 				);
 				if (!cancelled) {
 					setAvailableTimes(Array.isArray(res.data) ? res.data : []);
