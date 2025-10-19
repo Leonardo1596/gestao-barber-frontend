@@ -115,9 +115,13 @@ export function AppointmentForm({
 
 			try {
 				const formattedDate = format(watchedDate, "yyyy-MM-dd");
-				const res = await api.get(
-					`/available-times/${formattedDate}/${watchedBarberId}/${user.barbershop}?excludeId=${appointment?._id}`
-				);
+
+				let url = `/available-times/${formattedDate}/${watchedBarberId}/${user.barbershop}`;
+				if (appointment?._id) {
+					url += `?excludeId=${appointment._id}`;
+				}
+
+				const res = await api.get(url);
 				if (!cancelled) {
 					setAvailableTimes(Array.isArray(res.data) ? res.data : []);
 				}
