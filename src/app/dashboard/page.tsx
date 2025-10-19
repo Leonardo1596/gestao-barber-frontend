@@ -26,8 +26,6 @@ const reportLabels: Record<string, string> = {
 	productsSold: "Produtos Vendidos",
 	completedAppointments: "Agendamentos Concluídos",
 	completedServices: "Serviços Concluídos",
-	averageTicketAppointment: "Ticket Médio por Agendamento",
-	averageTicketService: "Ticket Médio por Serviço",
 };
 
 function formatValue(key: string, value: number) {
@@ -39,8 +37,8 @@ function formatValue(key: string, value: number) {
 			"netRevenue",
 			"appointmentRevenues",
 			"productRevenues",
-			"averageTicketAppointment",
-			"averageTicketService",
+			// "averageTicketAppointment",
+			// "averageTicketService",
 		].includes(key)
 	) {
 		return new Intl.NumberFormat("pt-BR", {
