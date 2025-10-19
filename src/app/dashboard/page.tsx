@@ -12,10 +12,9 @@ import {
 } from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { MonthSelector } from "./_components/MonthSelector";
-// Assuming these are placeholders for your actual fetch functions
-// In a real application, you'd need to ensure the correct path.
-// For this example, I'll keep the relative path as provided.
 import { fetchBarbers, fetchReport } from "../../lib/fetcher";
+import { RevenuesChart } from "./_components/revenues-chart";
+import { RecentActivity } from "./_components/recent-activity";
 
 const reportLabels: Record<string, string> = {
 	revenues: "Receitas",
@@ -88,18 +87,16 @@ export default function ReportsPage() {
 
 	if (!user) return <div></div>;
 
+	const chartData = report
+		? [
+				{ name: "Receitas", total: report.revenues },
+				{ name: "Despesas", total: report.expenses },
+		  ]
+		: [];
+
 	return (
 		<div>
 			<PageHeader title="Relatórios">
-				{/* Updated filter container:
-                    - w-full: Takes full width.
-                    - flex flex-row: Ensures side-by-side layout (mobile first).
-                    - justify-start: Aligns to the left on mobile (below the title).
-                    - md:justify-end: Aligns to the right on desktop.
-                    - items-center: Vertically aligns the selector/dropdown.
-                    - gap-2: Spacing between filters.
-                    - mt-2: Small top margin to separate from the title.
-                */}
 				<div className="w-full flex flex-row justify-start items-center gap-2 mt-2 md:justify-end">
 					<div className="w-[140px] sm:w-[280px]">
 						<MonthSelector onRangeChange={handleMonthChange} />
@@ -152,6 +149,25 @@ export default function ReportsPage() {
 						))}
 					</div>
 				)}
+			</div>
+
+			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-4">
+				<Card className="col-span-4">
+					<CardHeader>
+						<CardTitle>Visão Geral</CardTitle>
+					</CardHeader>
+					<CardContent className="pl-2">
+						<RevenuesChart data={chartData} />
+					</CardContent>
+				</Card>
+				<Card className="col-span-3">
+					<CardHeader>
+						<CardTitle>Atividade Recente</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<RecentActivity />
+					</CardContent>
+				</Card>
 			</div>
 		</div>
 	);
