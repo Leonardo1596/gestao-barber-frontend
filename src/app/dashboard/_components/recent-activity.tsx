@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { fetchTransactions } from "@/lib/fetcher"; // Assuming you have this fetcher
+import { fetchTransactions } from "@/lib/fetcher";
 
 export function RecentActivity() {
 	const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
@@ -27,8 +27,7 @@ export function RecentActivity() {
 							<AvatarImage src="/avatars/01.png" alt="Avatar" />
 							<AvatarFallback>
 								{transaction.clientName
-									? transaction.clientName.charAt(0)
-									: "U"}
+									&& transaction.clientName.charAt(0) || transaction.type === "saida" && transaction.description.charAt(0) || transaction.quantity && transaction.description ? transaction.description.charAt(0) : "P"}
 							</AvatarFallback>
 						</Avatar>
 						<div className="ml-4 space-y-1">
@@ -36,7 +35,7 @@ export function RecentActivity() {
 								{transaction.description || transaction.clientName}
 							</p>
 							<p className="text-sm text-muted-foreground">
-								{transaction.clientName || "Despesa"}
+								{transaction.clientName && "Agendamento" || transaction.type === "saida" && "Despesa" || transaction.quantity && "Produto"}
 							</p>
 						</div>
 						<div className="ml-auto font-medium">
