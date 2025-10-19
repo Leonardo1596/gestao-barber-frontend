@@ -1,7 +1,7 @@
 'use client';
 
 import type { ColumnDef } from "@tanstack/react-table";
-import type { Appointment, Product, Expense, Barber } from "@/lib/types";
+import type { Appointment, Product, Expense, Barber, Transaction } from "@/lib/types";
 import { MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,7 +31,8 @@ const formatCurrency = (value: number) => {
 
 export const getAppointmentColumns = (
 	barbers: Barber[],
-	onDelete: (transaction: Appointment | Product | Expense) => void
+	onDelete: (transaction: Appointment | Product | Expense) => void,
+	onMarkAsPaid: (transaction: Appointment | Product | Expense) => void
 ): ColumnDef<Appointment>[] => [
 	{
 		accessorKey: "clientName",
@@ -77,6 +78,13 @@ export const getAppointmentColumns = (
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end">
 						<DropdownMenuLabel>Ações</DropdownMenuLabel>
+						{transaction.status.trim().toLowerCase() === "pendente" && (
+							<DropdownMenuItem
+								onClick={() => onMarkAsPaid(transaction)}
+							>
+								Marcar como pago
+							</DropdownMenuItem>
+						)}
 						<DropdownMenuItem
 							className="text-destructive"
 							onClick={() => onDelete(transaction)}
@@ -92,7 +100,8 @@ export const getAppointmentColumns = (
 
 export const getProductColumns = (
 	barbers: Barber[],
-	onDelete: (transaction: Appointment | Product | Expense) => void
+	onDelete: (transaction: Appointment | Product | Expense) => void,
+	onMarkAsPaid: (transaction: Appointment | Product | Expense) => void
 ): ColumnDef<Product>[] => [
 	{
 		accessorKey: "value",
@@ -138,6 +147,13 @@ export const getProductColumns = (
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end">
 						<DropdownMenuLabel>Ações</DropdownMenuLabel>
+						{transaction.status.trim().toLowerCase() === "pendente" && (
+							<DropdownMenuItem
+								onClick={() => onMarkAsPaid(transaction)}
+							>
+								Marcar como pago
+							</DropdownMenuItem>
+						)}
 						<DropdownMenuItem
 							className="text-destructive"
 							onClick={() => onDelete(transaction)}
@@ -152,7 +168,8 @@ export const getProductColumns = (
 ];
 
 export const getExpenseColumns = (
-	onDelete: (transaction: Appointment | Product | Expense) => void
+	onDelete: (transaction: Appointment | Product | Expense) => void,
+	onMarkAsPaid: (transaction: Appointment | Product | Expense) => void
 ): ColumnDef<Expense>[] => [
 	{
 		accessorKey: "value",
@@ -186,6 +203,13 @@ export const getExpenseColumns = (
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end">
 						<DropdownMenuLabel>Ações</DropdownMenuLabel>
+						{transaction.status.trim().toLowerCase() === "pendente" && (
+							<DropdownMenuItem
+								onClick={() => onMarkAsPaid(transaction)}
+							>
+								Marcar como pago
+							</DropdownMenuItem>
+						)}
 						<DropdownMenuItem
 							className="text-destructive"
 							onClick={() => onDelete(transaction)}

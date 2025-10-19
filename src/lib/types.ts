@@ -40,6 +40,7 @@ export type Product = {
 	description: string;
 	barbershop: string;
 	barber: string;
+	status: string;
 };
 
 export type Expense = {
@@ -84,7 +85,7 @@ export type Transaction = {
 	amount: number;
 	description: string;
 	date: string;
-	status: "Pendente" | "Completo" | "Falhou";
+	status: "pendente" | "pago";
 	details: TransactionDetails;
 };
 

@@ -24,6 +24,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/services/api";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
+import { PlusCircle } from "lucide-react";
+import { ExpenseForm } from "./_components/expense-form";
 
 export default function TransactionsPage() {
 	const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -31,7 +40,10 @@ export default function TransactionsPage() {
 	const [expenses, setExpenses] = useState<Expense[]>([]);
 	const [barbers, setBarbers] = useState<Barber[]>([]);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [isMarkAsPaidDialogOpen, setIsMarkAsPaidDialogOpen] = useState(false);
+	const [isExpenseDialogOpen, setIsExpenseDialogOpen] = useState(false);
 	const [selectedTransaction, setSelectedTransaction] = useState<Appointment | Product | Expense | null>(null);
+	const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
 	const [transactionType, setTransactionType] = useState<
 		"appointments" | "products" | "expenses"
 	>("appointments");
@@ -50,12 +62,8 @@ export default function TransactionsPage() {
 			fetchBarbers(),
 		]).then(([transactionsData, barbersData]) => {
 			if (transactionsData && Array.isArray(transactionsData)) {
-				const appointmentsData = transactionsData.filter(
-					(t: any) => t.appointment
-				);
-				const productsData = transactionsData.filter(
-					(t: any) => t.quantity
-				);
+				const appointmentsData = transactionsData.filter((t: any) => t.clientName);
+				const productsData = transactionsData.filter((t: any) => t.quantity);
 				const expensesData = transactionsData.filter(
 					(t: any) => t.type === "saida"
 				);
@@ -81,11 +89,15 @@ export default function TransactionsPage() {
 		setIsDeleteDialogOpen(true);
 	};
 
+	const openMarkAsPaidDialog = (transaction: Appointment | Product | Expense) => {
+		setSelectedTransaction(transaction);
+		setIsMarkAsPaidDialogOpen(true);
+	};
+
 	const handleDeleteTransaction = async () => {
 		if (!selectedTransaction) return;
 
 		try {
-			console.log(selectedTransaction._id)
 			await api.delete(`/delete-transaction/${selectedTransaction._id}`);
 			toast({
 				title: "Transação Excluída",
@@ -96,9 +108,7 @@ export default function TransactionsPage() {
 					dateRange.start,
 					dateRange.end
 				);
-				const appointmentsData = transactionsData.filter(
-					(t: any) => t.appointment
-				);
+				const appointmentsData = transactionsData.filter((t: any) => t.clientName);
 				const productsData = transactionsData.filter((t: any) => t.quantity);
 				const expensesData = transactionsData.filter(
 					(t: any) => t.type === "saida"
@@ -121,25 +131,86 @@ export default function TransactionsPage() {
 		}
 	};
 
+	const handleMarkAsPaid = async () => {
+		if (!selectedTransaction) return;
+
+		try {
+			const isAppointment = "clientName" in selectedTransaction;
+			const successMessage = isAppointment
+				? "Agendamento concluído com sucesso."
+				: "Transação marcada como paga.";
+
+			await api.put(`/mark-as-paid/${selectedTransaction._id}`);
+			toast({
+				title: "Transação Atualizada",
+				description: successMessage,
+			});
+			if (dateRange) {
+				const transactionsData = await fetchTransactions(
+					dateRange.start,
+					dateRange.end
+				);
+				const appointmentsData = transactionsData.filter((t: any) => t.clientName);
+				const productsData = transactionsData.filter((t: any) => t.quantity);
+				const expensesData = transactionsData.filter(
+					(t: any) => t.type === "saida"
+				);
+				setAppointments(appointmentsData);
+				setProducts(productsData);
+				setExpenses(expensesData);
+			}
+		} catch (error) {
+			console.error("Failed to mark as paid:", error);
+			toast({
+				variant: "destructive",
+				title: "Erro ao Marcar como Pago",
+				description:
+					"Não foi possível marcar a transação como paga. Tente novamente.",
+			});
+		} finally {
+			setIsMarkAsPaidDialogOpen(false);
+			setSelectedTransaction(null);
+		}
+	};
+
+	const handleExpenseFormSuccess = () => {
+		if (!dateRange) return;
+		fetchTransactions(dateRange.start, dateRange.end).then((transactionsData) => {
+			const expensesData = transactionsData.filter(
+				(t: any) => t.type === "saida"
+			);
+			setExpenses(expensesData);
+		});
+		setIsExpenseDialogOpen(false);
+	};
+
 	const { columns, data, filterColumn, filterPlaceholder } = useMemo(() => {
 		switch (transactionType) {
 			case "appointments":
 				return {
-					columns: getAppointmentColumns(barbers, openDeleteDialog),
+					columns: getAppointmentColumns(
+						barbers,
+						openDeleteDialog,
+						openMarkAsPaidDialog
+					),
 					data: appointments,
 					filterColumn: "clientName",
 					filterPlaceholder: "Filtrar por cliente...",
 				};
 			case "products":
 				return {
-					columns: getProductColumns(barbers, openDeleteDialog),
+					columns: getProductColumns(
+						barbers,
+						openDeleteDialog,
+						openMarkAsPaidDialog
+					),
 					data: products,
 					filterColumn: "name",
 					filterPlaceholder: "Filtrar por produto...",
 				};
 			case "expenses":
 				return {
-					columns: getExpenseColumns(openDeleteDialog),
+					columns: getExpenseColumns(openDeleteDialog, openMarkAsPaidDialog),
 					data: expenses,
 					filterColumn: "description",
 					filterPlaceholder: "Filtrar por descrição...",
@@ -152,6 +223,32 @@ export default function TransactionsPage() {
 			<PageHeader title="Transações">
 				<div className="flex flex-col md:flex-row justify-end items-end md:items-center gap-4">
 					<MonthSelector onRangeChange={handleMonthChange} />
+					{transactionType === "expenses" && (
+						<Dialog
+							open={isExpenseDialogOpen}
+							onOpenChange={setIsExpenseDialogOpen}
+						>
+							<DialogTrigger asChild>
+								<Button>
+									<PlusCircle className="mr-2 h-4 w-4" />
+									Adicionar Despesa
+								</Button>
+							</DialogTrigger>
+							<DialogContent>
+								<DialogHeader>
+									<DialogTitle>
+										{selectedExpense
+											? "Editar Despesa"
+											: "Adicionar Despesa"}
+									</DialogTitle>
+								</DialogHeader>
+								<ExpenseForm
+									onSuccess={handleExpenseFormSuccess}
+									expense={selectedExpense || undefined}
+								/>
+							</DialogContent>
+						</Dialog>
+					)}
 				</div>
 			</PageHeader>
 
@@ -207,6 +304,26 @@ export default function TransactionsPage() {
 						<AlertDialogCancel>Cancelar</AlertDialogCancel>
 						<AlertDialogAction onClick={handleDeleteTransaction}>
 							Continuar
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+
+			<AlertDialog
+				open={isMarkAsPaidDialogOpen}
+				onOpenChange={setIsMarkAsPaidDialogOpen}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Marcar como Pago</AlertDialogTitle>
+						<AlertDialogDescription>
+							Tem certeza de que deseja marcar esta transação como paga?
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancelar</AlertDialogCancel>
+						<AlertDialogAction onClick={handleMarkAsPaid}>
+							Confirmar
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
